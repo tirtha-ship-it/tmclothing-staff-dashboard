@@ -1,0 +1,2831 @@
+<!DOCTYPE html>
+<html lang="ne">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Enterprise Staff Checklist, Attendance & Sales Dashboard</title>
+    
+    <!-- iPhone (iOS) Safari App Specific Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="हाम्रो स्टाफ">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font (Inter & Mukta for Nepali support) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Mukta:wght=400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js for beautiful analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- html2pdf.js library for direct PDF generation and downloading -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Inter', 'Mukta', sans-serif;
+            background-color: #f8fafc;
+            /* Prevent double-tap zoom on iOS Safari */
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* Custom scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        /* AI Pulse Glow */
+        .ai-pulse-glow {
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.2);
+            animation: ai-pulse 2s infinite alternate;
+        }
+        @keyframes ai-pulse {
+            0% { box-shadow: 0 0 10px rgba(139, 92, 246, 0.15); }
+            100% { box-shadow: 0 0 22px rgba(139, 92, 246, 0.45); }
+        }
+
+        /* Responsive Mobile Sections Switcher CSS */
+        @media (max-width: 1023px) {
+            .mobile-tab-content {
+                display: none;
+            }
+            .mobile-tab-content.active {
+                display: block;
+            }
+        }
+
+        /* 🖨️ ADVANCED PRINTER FRIENDLY CSS LAYOUT */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #weekly-report-section, #weekly-report-section * {
+                visibility: visible;
+            }
+            #weekly-report-section {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                border: none !important;
+                box-shadow: none !important;
+                background-color: #ffffff !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+            table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+            }
+            th, td {
+                border: 1px solid #94a3b8 !important;
+                padding: 10px 6px !important;
+                font-size: 11px !important;
+                color: #000000 !important;
+                text-align: center !important;
+            }
+            th:first-child, td:first-child {
+                text-align: left !important;
+            }
+            th {
+                background-color: #f1f5f9 !important;
+                font-weight: bold !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .bg-emerald-50 {
+                background-color: #e2fbf0 !important;
+                border-color: #a7f3d0 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .bg-red-50 {
+                background-color: #fee2e2 !important;
+                border-color: #fecaca !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .bg-amber-50 {
+                background-color: #fef3c7 !important;
+                border-color: #fde68a !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .bg-indigo-50\/20 {
+                background-color: #f5f3ff !important;
+                border-color: #ddd6fe !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col bg-slate-50 pb-20 lg:pb-0">
+
+    <!-- Top Navigation / Header -->
+    <header id="app-header" class="bg-gradient-to-r from-indigo-900 via-purple-800 to-indigo-950 text-white shadow-lg px-4 py-4 sticky top-0 z-40 transition-all duration-500">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <!-- Left Branding & Customize option -->
+            <div class="flex items-center gap-3 w-full md:w-auto">
+                <div class="p-2.5 bg-white/10 rounded-xl backdrop-blur-sm cursor-pointer hover:bg-white/20 transition-all" onclick="openBrandingModal()" title="लोगो र नाम फेर्नुहोस्">
+                    <span id="header-logo-icon" class="text-2xl text-yellow-300">
+                        <i class="fa-solid fa-store animate-pulse"></i>
+                    </span>
+                </div>
+                <div class="flex-grow">
+                    <div class="flex items-center gap-2">
+                        <h1 id="header-business-name" class="text-xl md:text-2xl font-extrabold tracking-tight cursor-pointer hover:text-yellow-200 transition-colors" onclick="openBrandingModal()" title="नाम परिवर्तन गर्न क्लिक गर्नुहोस्">
+                            हाम्रो डिजिटल पसल
+                        </h1>
+                        <button onclick="openBrandingModal()" class="text-xs text-white/60 hover:text-white p-1">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                    </div>
+                    <p id="header-business-sub" class="text-xs text-indigo-200 font-medium">स्टाफ कार्य, साप्ताहिक हाजिरी र बिक्री ड्यासबोर्ड</p>
+                </div>
+            </div>
+
+            <!-- Time, Nepali Date and Global Progress -->
+            <div class="flex flex-wrap items-center gap-3 justify-end w-full md:w-auto text-sm">
+                <!-- Clock & Date Widget -->
+                <div class="bg-white/10 px-3.5 py-2 rounded-xl backdrop-blur-sm text-right min-w-[150px] border border-white/5">
+                    <span id="live-time" class="block font-bold text-yellow-300 text-sm tracking-widest"><i class="fa-regular fa-clock mr-1"></i> १२:००:०० AM</span>
+                    <span id="live-date" class="text-[10px] text-indigo-100 font-medium block">मिति लोड हुँदै...</span>
+                </div>
+
+                <!-- Overall Weekly Stats -->
+                <div class="bg-white/10 px-3.5 py-2 rounded-xl backdrop-blur-sm text-center border border-white/5">
+                    <span class="block text-[10px] text-indigo-200 uppercase font-black tracking-wider">साप्ताहिक प्रगति</span>
+                    <span id="header-progress" class="font-extrabold text-emerald-300 text-sm block">0% Done</span>
+                </div>
+
+                <!-- Theme accessories dropdown click -->
+                <div class="relative">
+                    <button onclick="toggleThemeMenu()" class="p-2 bg-white/10 rounded-xl hover:bg-white/20 transition-all text-white border border-white/5" title="थिम एक्सेसरिज">
+                        <i class="fa-solid fa-palette text-lg text-amber-300"></i>
+                    </button>
+                    <!-- Floating theme menu -->
+                    <div id="theme-menu" class="hidden absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-xl border border-slate-100 p-2 text-slate-800 z-50 animate-fade-in text-xs">
+                        <span class="block font-bold text-slate-400 mb-1.5 px-2">थिम र रङ रोज्नुहोस्:</span>
+                        <div class="space-y-1">
+                            <button onclick="changeThemeColor('indigo')" class="w-full text-left p-1.5 rounded-lg hover:bg-slate-50 flex items-center gap-2 font-semibold">
+                                <span class="w-3.5 h-3.5 rounded-full bg-indigo-600"></span> निलो (Indigo)
+                            </button>
+                            <button onclick="changeThemeColor('emerald')" class="w-full text-left p-1.5 rounded-lg hover:bg-slate-50 flex items-center gap-2 font-semibold">
+                                <span class="w-3.5 h-3.5 rounded-full bg-emerald-600"></span> हरियो (Emerald)
+                            </button>
+                            <button onclick="changeThemeColor('violet')" class="w-full text-left p-1.5 rounded-lg hover:bg-slate-50 flex items-center gap-2 font-semibold">
+                                <span class="w-3.5 h-3.5 rounded-full bg-purple-600"></span> वैजनी (Purple)
+                            </button>
+                            <button onclick="changeThemeColor('rose')" class="w-full text-left p-1.5 rounded-lg hover:bg-slate-50 flex items-center gap-2 font-semibold">
+                                <span class="w-3.5 h-3.5 rounded-full bg-rose-600"></span> रातो (Rose)
+                            </button>
+                            <button onclick="changeThemeColor('amber')" class="w-full text-left p-1.5 rounded-lg hover:bg-slate-50 flex items-center gap-2 font-semibold">
+                                <span class="w-3.5 h-3.5 rounded-full bg-amber-500"></span> सुन्तला (Amber)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
+
+        <!-- 📱 IPHONE HOME SCREEN INSTALL GUIDE (Visible on Mobile) -->
+        <section id="ios-guide-card" class="bg-gradient-to-br from-indigo-50 to-purple-50 p-4 rounded-2xl border border-indigo-100/80 shadow-sm flex items-center justify-between gap-4 lg:hidden no-print">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-xl shadow-md shadow-indigo-200">
+                    <i class="fa-solid fa-mobile-screen-button"></i>
+                </div>
+                <div>
+                    <h4 class="text-xs font-black text-slate-900 uppercase">iPhone मा यो एप सेभ गर्नुहोस्!</h4>
+                    <p class="text-[11px] text-slate-500 mt-0.5 leading-relaxed">आफ्नो iPhone को होम स्क्रिनमा राखेर एउटा असली एप जस्तै चलाउनुहोस्।</p>
+                </div>
+            </div>
+            <button onclick="openIosGuideModal()" class="px-3 py-2 bg-indigo-600 text-white font-extrabold text-[11px] rounded-xl hover:bg-indigo-700 transition-all shadow-sm">
+                कसरी गर्ने?
+            </button>
+        </section>
+
+        <!-- CLOUD SYNC SETTINGS PANEL -->
+        <section class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 no-print">
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                        <span class="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg">
+                            <i class="fa-solid fa-cloud-arrow-up text-sm animate-bounce"></i>
+                        </span>
+                        <h2 class="text-sm font-black text-slate-800 uppercase tracking-wider">मल्टी-डिभाइस क्लाउड सिङ्क (Multi-Device Cloud Sync)</h2>
+                    </div>
+                    <p class="text-xs text-slate-400">तपाईंका स्टाफहरूले आफ्नै मोबाइलबाट हाजिरी, काम वा बिक्री इन्ट्री गर्दा ड्यासबोर्डमा तुरुन्त अपडेट गराउन यहाँ एउटा समान कोड राख्नुहोस्।</p>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-2.5 w-full lg:w-auto">
+                    <div class="relative flex-grow lg:w-72">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 text-xs">
+                            <i class="fa-solid fa-key"></i>
+                        </span>
+                        <input type="text" id="cloud-shop-code" placeholder="पसलको कोड राख्नुहोस् (उदा: nepal-cafe-2026)" 
+                            class="w-full pl-8 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs font-semibold">
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="enableCloudSync()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 whitespace-nowrap shadow-sm btn-theme">
+                            <i class="fa-solid fa-wifi"></i> सिङ्क सुरु गर्नुहोस्
+                        </button>
+                        <button onclick="disableCloudSync()" id="btn-disconnect" class="hidden bg-red-500/10 text-red-500 hover:bg-red-500/20 text-xs font-bold px-4 py-2 rounded-xl border border-red-500/20 transition-all flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-unlink"></i> विच्छेद
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- Sync Indicator Badges -->
+            <div id="sync-status-indicator" class="hidden mt-3 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
+                <div class="flex items-center gap-2">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span class="font-bold text-emerald-600 flex items-center gap-1">
+                        क्लाउड सिङ्क सक्रिय छ! कोड: <span id="active-sync-code" class="bg-slate-100 px-2 py-0.5 rounded text-slate-800"></span>
+                    </span>
+                </div>
+                <div class="text-slate-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-arrows-rotate animate-spin text-[10px]"></i>
+                    <span>अन्तिम सिङ्क: <span id="last-sync-time" class="font-semibold text-slate-600">भर्खरै</span></span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================================================
+             MOBILE VIEW TAB ENGINES (SWITCHES VISIBILITY ON MOBILE)
+             ========================================================================== -->
+
+        <!-- TAB 1: DASHBOARD (Active by default on Mobile) -->
+        <div id="mobile-tab-dashboard" class="mobile-tab-content active space-y-6">
+            <!-- SECTION 1: DASHBOARD STATS -->
+            <section class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <!-- KPI 1: Overall Summary -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between transition-all duration-300 hover:shadow-md">
+                    <div class="space-y-2 w-2/3">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">साप्ताहिक प्रगति (Tasks Done)</span>
+                        <div class="flex items-baseline gap-2">
+                            <span id="stat-total-percent" class="text-3xl font-black text-indigo-600 text-theme">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                            <div id="stat-total-bar" class="bg-indigo-600 h-full rounded-full transition-all duration-500 bg-theme" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="p-4 bg-indigo-50 text-indigo-600 rounded-2xl bg-theme-light text-theme-icon">
+                        <i class="fa-solid fa-chart-line text-2xl"></i>
+                    </div>
+                </div>
+
+                <!-- KPI 2: Today's Status -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between transition-all duration-300 hover:shadow-md">
+                    <div class="space-y-2">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">आजको कार्य स्थिति (Today's Tasks)</span>
+                        <div class="flex items-baseline gap-2">
+                            <span id="stat-today-done" class="text-3xl font-black text-emerald-600">0/0</span>
+                        </div>
+                        <p id="stat-today-text" class="text-xs text-slate-500">आजको कुनै काम बाँकी छैन !</p>
+                    </div>
+                    <div class="p-4 bg-emerald-50 text-emerald-600 rounded-2xl">
+                        <i class="fa-solid fa-calendar-check text-2xl"></i>
+                    </div>
+                </div>
+
+                <!-- KPI 3: Sales Achievement -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between transition-all duration-300 hover:shadow-md">
+                    <div class="space-y-2 w-2/3">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">कुल बिक्री उपलब्धि (Sales Achievement)</span>
+                        <div class="flex items-baseline gap-1">
+                            <span id="stat-sales-rate" class="text-2xl font-black text-amber-500">0%</span>
+                            <span id="stat-sales-values" class="text-[10px] text-slate-400 block truncate">रु ०/०</span>
+                        </div>
+                        <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                            <div id="stat-sales-bar" class="bg-amber-50 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="p-4 bg-amber-50 text-amber-500 rounded-2xl">
+                        <i class="fa-solid fa-sack-dollar text-2xl"></i>
+                    </div>
+                </div>
+
+                <!-- KPI 4: Star Performer of the Week -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between transition-all duration-300 hover:shadow-md">
+                    <div class="space-y-2">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">उत्कृष्ट प्रदर्शन (Star Performer)</span>
+                        <div>
+                            <span id="stat-star-name" class="text-xl font-bold text-slate-800 block truncate">सक्रिय स्टाफ...</span>
+                            <span id="stat-star-desc" class="text-xs text-slate-400">धेरै काम र बिक्री गर्ने</span>
+                        </div>
+                    </div>
+                    <div class="p-4 bg-rose-50 text-rose-500 rounded-2xl animate-pulse">
+                        <i class="fa-solid fa-crown text-2xl"></i>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Analytics and Charts Graph Section -->
+            <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Chart Container -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 lg:col-span-2 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-800">कार्य सम्पादन र बिक्री प्रगति ग्राफ (Staff Progress Graph)</h3>
+                            <p class="text-xs text-slate-400">कार्य सम्पन्न दर र साप्ताहिक बिक्री प्रगतिको तुलनात्मक विवरण</p>
+                        </div>
+                        <div class="flex gap-1.5 bg-slate-100 p-1 rounded-xl">
+                            <button onclick="toggleChartDataType('tasks')" id="chart-btn-tasks" class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all bg-white shadow-sm text-slate-800">
+                                कार्य प्रगति %
+                            </button>
+                            <button onclick="toggleChartDataType('sales')" id="chart-btn-sales" class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-800">
+                                बिक्री प्रगति %
+                            </button>
+                        </div>
+                    </div>
+                    <div class="relative h-[240px]">
+                        <canvas id="progressChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Info Help Card -->
+                <div class="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white p-5 rounded-2xl shadow-md flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-2 text-yellow-400 font-bold text-sm">
+                            <i class="fa-solid fa-lightbulb"></i>
+                            <span>महत्वपूर्ण सुविधाहरू</span>
+                        </div>
+                        <h4 class="text-lg font-bold">एप व्यवस्थापन निर्देशिका</h4>
+                        <ul class="text-xs text-slate-300 space-y-2.5 list-disc pl-4 leading-relaxed">
+                            <li><strong>कस्टमाइज र थिम:</strong> हेडरमा रहेको नाम वा प्यालेट आइकनमा क्लिक गरी आफ्नो व्यवसायको नाम, लोगो आइकन र रङ मन परे जस्तै परिवर्तन गर्नुहोस्।</li>
+                            <li><strong>हाजिरी र बिक्री दर्ता:</strong> हाजिरी ग्रिडमा क्लिक गरेर स्थिति फेर्नुहोस्। बिक्रीको लक्ष्य र प्राप्त बिक्री अङ्कमा प्रविष्टि गरी ड्यासबोर्डमा प्रभाव हेर्नुहोस्।</li>
+                            <li><strong>क्लाउड सिङ्क (Cloud Sync):</strong> एउटै कोड प्रयोग गरेर स्टाफ र व्यवस्थापक सबै डिभाइसमा डाटा सिङ्क गर्नुहोस्।</li>
+                        </ul>
+                    </div>
+                    <div class="pt-4 border-t border-slate-800 mt-4 flex justify-between items-center gap-2">
+                        <span class="text-[10px] text-slate-500">डाटा लोकल र क्लाउडमा सिङ्क हुन्छ</span>
+                        <button onclick="triggerResetWithConfirmation()" class="text-[11px] font-bold bg-red-500/10 text-red-400 hover:bg-red-500/20 px-3 py-2 rounded-xl border border-red-500/20 transition-all">
+                            <i class="fa-solid fa-trash-can mr-1"></i> सबै डाटाहरू रिसेट गर्नुहोस्
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- TAB 2: WORKSPACE / CHECKLIST -->
+        <div id="mobile-tab-checklist" class="mobile-tab-content space-y-6 lg:block">
+            <!-- SECTION 3: WORKSPACE (DAY, STAFF SELECTORS & CHECKLIST) -->
+            <section class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <!-- Left Panel: Selectors (Day and Staff) -->
+                <div class="lg:col-span-1 space-y-6">
+                    <!-- Days Selector Card -->
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 space-y-3">
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">हप्ताको बार रोज्नुहोस् (Select Day)</h3>
+                        <!-- Mobile-only swipeable/scrollable horizontal day view -->
+                        <div class="flex overflow-x-auto gap-2 pb-2 lg:grid lg:grid-cols-1 lg:gap-2 custom-scrollbar" id="days-container">
+                            <!-- Days will be dynamically loaded here by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Staff Selector Card -->
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 space-y-3">
+                        <div class="flex justify-between items-center mb-2 gap-1">
+                            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">स्टाफ रोज्नुहोस्</h3>
+                            <button onclick="openStaffSettingsModal()" class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-2.5 py-1.5 rounded-xl font-bold transition-all text-theme-icon bg-theme-light" title="स्टाफहरू थप्नुहोस् वा नाम फेर्नुहोस्">
+                                <i class="fa-solid fa-users-gear mr-1"></i> स्टाफ व्यवस्थापन
+                            </button>
+                        </div>
+                        <!-- Mobile-only scrollable staff selector -->
+                        <div class="flex overflow-x-auto gap-2 pb-2 lg:block lg:space-y-2 lg:overflow-visible lg:pb-0 custom-scrollbar" id="staff-container">
+                            <!-- Staff selection buttons will be loaded dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Panel: Interactive Checklist & Task Management -->
+                <div class="lg:col-span-3 bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between min-h-[480px]">
+                    <div class="space-y-4">
+                        <!-- Checklist Header info -->
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-100 pb-4 gap-3">
+                            <div>
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span id="current-day-badge" class="px-3 py-1 bg-indigo-100 text-indigo-800 text-xs font-extrabold rounded-full bg-theme-light text-theme">आइतवार</span>
+                                    <h2 class="text-lg font-extrabold text-slate-800">
+                                        <span id="current-staff-name" class="text-indigo-600 text-theme">स्टाफ नाम</span> को कार्यसूची
+                                    </h2>
+                                </div>
+                                <p class="text-xs text-slate-400 mt-1">यस दिनको दैनिक जिम्मेवारी र सम्पन्नता स्थिति</p>
+                            </div>
+
+                            <!-- Progress Bar for Current Day -->
+                            <div class="flex items-center gap-3 w-full sm:w-auto">
+                                <span class="text-xs font-bold text-slate-500 whitespace-nowrap">आजको प्रगति:</span>
+                                <div class="w-32 bg-slate-100 h-2 rounded-full overflow-hidden">
+                                    <div id="current-selection-progress" class="bg-emerald-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+                                </div>
+                                <span id="current-selection-percent" class="text-xs font-bold text-emerald-600">0%</span>
+                            </div>
+                        </div>
+
+                        <!-- Task List Items -->
+                        <div id="checklist-tasks" class="space-y-3 max-h-[350px] overflow-y-auto custom-scrollbar pr-1">
+                            <!-- Tasks will be dynamically populated here -->
+                        </div>
+
+                        <!-- Empty State for Tasks -->
+                        <div id="empty-state" class="hidden flex-col items-center justify-center py-10 text-center space-y-2">
+                            <div class="w-16 h-16 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center text-2xl">
+                                <i class="fa-solid fa-list-check"></i>
+                            </div>
+                            <p class="text-sm font-semibold text-slate-600">यस दिनको लागि कुनै काम सूचीकृत गरिएको छैन।</p>
+                            <p class="text-xs text-slate-400">तलको बक्स प्रयोग गरी नयाँ काम थप्नुहोस् वा माथिको एआईको मद्दत लिनुहोस्।</p>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Action: Add Custom Task -->
+                    <div class="mt-6 pt-4 border-t border-slate-100">
+                        <form id="add-task-form" class="flex flex-col sm:flex-row gap-2">
+                            <div class="relative flex-grow">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                                    <i class="fa-solid fa-plus-circle"></i>
+                                </span>
+                                <input type="text" id="new-task-title" required placeholder="यो स्टाफको लागि नयाँ काम थप्नुहोस् (उदा: काउन्टर सफा गर्ने...)" 
+                                    class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white text-sm transition-all">
+                            </div>
+                            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm px-5 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm whitespace-nowrap btn-theme">
+                                <i class="fa-solid fa-plus text-xs"></i> नयाँ काम थप्नुहोस्
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- TAB 3: ATTENDANCE & SALES PERFORMANCE -->
+        <div id="mobile-tab-attendance" class="mobile-tab-content space-y-6 lg:block">
+            <!-- WEEKLY ATTENDANCE & SALES PERFORMANCE MANAGER -->
+            <section class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 space-y-4">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-100 pb-3 gap-2">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-clipboard-user text-indigo-600 text-theme-icon"></i>
+                            <span>साप्ताहिक हाजिरी र बिक्री प्रविष्टि (Weekly Attendance & Sales Performance)</span>
+                        </h3>
+                        <p class="text-xs text-slate-400">प्रत्येक स्टाफको ७ दिनको हाजिरी र साप्ताहिक बिक्री उपलब्धि यहाँबाट दर्ता गर्नुहोस्</p>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs flex-wrap">
+                        <span class="px-2 py-1 bg-emerald-50 text-emerald-700 rounded font-semibold border border-emerald-100">P - उपस्थित</span>
+                        <span class="px-2 py-1 bg-red-50 text-red-700 rounded font-semibold border border-red-100">A - अनुपस्थित</span>
+                        <span class="px-2 py-1 bg-amber-50 text-amber-700 rounded font-semibold border border-amber-100">H - आधा दिन</span>
+                        <span class="px-2 py-1 bg-slate-100 text-slate-600 rounded font-semibold border border-slate-200">O - बिदा</span>
+                    </div>
+                </div>
+
+                <!-- List of Staff with Attendance Grid and Sales inputs -->
+                <div class="space-y-4 divide-y divide-slate-100" id="attendance-sales-container">
+                    <!-- Loaded Dynamically by JS -->
+                </div>
+            </section>
+        </div>
+
+        <!-- TAB 4: GEMINI AI POWERHOUSE -->
+        <div id="mobile-tab-ai" class="mobile-tab-content space-y-6 lg:block">
+            <!-- SECTION 2: GEMINI AI POWERHOUSE HUB -->
+            <section class="bg-gradient-to-r from-purple-900 via-indigo-950 to-purple-950 text-white rounded-3xl p-6 shadow-xl border border-purple-500/20 ai-pulse-glow">
+                <div class="flex flex-col lg:flex-row gap-6 items-stretch">
+                    <!-- AI Left Control: Generator and Planner -->
+                    <div class="lg:w-1/2 space-y-4 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="bg-purple-500/30 text-purple-300 text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1">
+                                    <i class="fa-solid fa-wand-magic-sparkles"></i> Gemini AI v2.5 Powerhouse
+                                </span>
+                            </div>
+                            <h3 class="text-xl md:text-2xl font-extrabold text-white">🔮 स्मार्ट एआई कार्य सहायक (Smart AI Assistant)</h3>
+                            <p class="text-xs text-purple-200 mt-1">तपाईंको व्यवसाय र आवश्यकता अनुसार स्टाफका लागि ४-५ वटा उत्कृष्ट दैनिक कामहरू तुरुन्त सिर्जना गर्नुहोस् र थप्नुहोस्।</p>
+                        </div>
+
+                        <!-- AI Inputs -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-white/5 p-4 rounded-2xl border border-white/10">
+                            <div class="space-y-1">
+                                <label class="block text-[10px] font-bold text-purple-200 uppercase tracking-wide">व्यवसायको प्रकार (Business Sector)</label>
+                                <input type="text" id="ai-business-sector" placeholder="उदा: रेस्टुरेन्ट, क्याफे, किराना पसल" 
+                                    class="w-full px-3 py-2 bg-slate-900/50 border border-purple-400/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-xs text-white font-semibold">
+                            </div>
+                            <div class="space-y-1">
+                                <label class="block text-[10px] font-bold text-purple-200 uppercase tracking-wide">स्टाफको भूमिका (Staff Role)</label>
+                                <select id="ai-staff-role" class="w-full px-3 py-2 bg-slate-900/50 border border-purple-400/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-xs text-white">
+                                    <option value="Operations">सञ्चालन (Operations & Cafe)</option>
+                                    <option value="Marketing">बिक्री र मार्केटिङ (Sales & Marketing)</option>
+                                    <option value="Accounts">प्रशासन र लेखा (Admin & Accounts)</option>
+                                    <option value="Customer Service">ग्राहक सेवा (Customer Support)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2 pt-2">
+                            <button onclick="generateAITasks()" id="btn-ai-tasks" class="flex-grow sm:flex-none px-5 py-2.5 bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-slate-950 font-black text-xs rounded-xl transition-all shadow-md flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-sparkles animate-spin"></i> नयाँ कामहरू सिर्जना गर्नुहोस् (Generate Tasks)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- AI Right Control -->
+                    <div class="lg:w-1/2 bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col justify-between space-y-4">
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center">
+                                <h4 class="text-sm font-black text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+                                    <i class="fa-solid fa-chart-line"></i> एआई पर्फर्मेन्स कोच (AI Coach Performance & Attendance Review)
+                                </h4>
+                                <span class="text-[10px] text-purple-300 bg-purple-500/20 px-2 py-0.5 rounded-full font-semibold">Real-Time</span>
+                            </div>
+                            <p class="text-xs text-slate-300 leading-relaxed" id="ai-coach-text">
+                                स्टाफको साप्ताहिक उपस्थिति (Attendance), बिक्री तथ्यांक (Sales Performance) र कार्य प्रगतिको पूरा विश्लेषण गर्न एआई कोचलाई आग्रह गर्नुहोस्। कोचले रचनात्मक सल्लाह नेपालीमा दिनेछ।
+                            </p>
+                        </div>
+
+                        <!-- Output TTS controls -->
+                        <div id="ai-tts-box" class="hidden bg-slate-950/60 p-3 rounded-xl border border-purple-500/30 flex items-center justify-between gap-3 animate-fade-in">
+                            <div class="flex items-center gap-2">
+                                <span class="relative flex h-3 w-3">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                                </span>
+                                <span class="text-xs font-bold text-emerald-400">एआई आवाज तयार छ!</span>
+                            </div>
+                            <button onclick="playAIFeedbackAudio()" id="btn-play-audio" class="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 text-xs font-black rounded-lg transition-all flex items-center gap-1.5">
+                                <i class="fa-solid fa-volume-high"></i> आवाज सुन्नुहोस् (Listen Speech)
+                            </button>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <button onclick="generateAICoachFeedback()" id="btn-ai-coach" class="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-brain"></i> सम्पूर्ण प्रदर्शन विश्लेषण गर्नुहोस् (Analyze All Performance)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Hidden AI Task Preview Modal/Box for generated tasks -->
+                <div id="ai-tasks-preview-box" class="hidden mt-4 pt-4 border-t border-white/10 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h4 class="text-sm font-bold text-purple-300 flex items-center gap-1">
+                            <i class="fa-solid fa-clipboard-check text-yellow-400"></i> सिर्जना गरिएका कामहरूको ड्राफ्ट (Review Tasks Draft)
+                        </h4>
+                        <button onclick="closeAITaskPreview()" class="text-xs text-slate-400 hover:text-white">बन्द गर्नुहोस्</button>
+                    </div>
+                    <div id="ai-generated-items-list" class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+                        <!-- Dynamic tasks with checkboxes will go here -->
+                    </div>
+                    <div class="flex justify-end gap-2 pt-2">
+                        <button onclick="applyAITasks()" class="px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-slate-950 font-black text-xs rounded-xl transition-all">
+                            <i class="fa-solid fa-circle-plus"></i> यी कार्यहरू आजको चेकलिस्टमा थप्नुहोस् (Apply to Checklist)
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- TAB 5: MASTER REPORT & EXPORT -->
+        <div id="mobile-tab-report" class="mobile-tab-content space-y-6 lg:block">
+            <!-- SECTION 4: MASTER WEEKLY REPORT OVERVIEW TABLE -->
+            <section id="weekly-report-section" class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 space-y-4">
+                <!-- Print Only Header (Visible only when printed/PDF generated) -->
+                <div id="print-only-header" class="hidden print-only mb-6 border-b-2 border-slate-300 pb-4">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h1 id="print-business-name" class="text-2xl font-black text-slate-950">हाम्रो डिजिटल पसल</h1>
+                            <p id="print-business-tagline" class="text-sm text-slate-600">स्टाफ कार्य, साप्ताहिक हाजिरी र बिक्री ड्यासबोर्ड</p>
+                        </div>
+                        <div class="text-right">
+                            <p id="print-date" class="text-xs font-bold text-slate-700">मिति: लोड हुँदै...</p>
+                            <p class="text-[10px] text-slate-400">साप्ताहिक एकीकृत प्रतिवेदन (Weekly Integrated Report)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Standard Section Header (Hidden when printing) -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 no-print">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-800">हप्ताभरिको विस्तृत एकीकृत रिपोर्ट (Master Weekly Report Overview)</h3>
+                        <p class="text-xs text-slate-400 font-medium">कामको प्रगति विवरण, कुल हाजिरी उपस्थिति, र साप्ताहिक बिक्री सम्पादनको समष्टिगत रिपोर्ट</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <!-- NEW DIRECT PDF DOWNLOAD BUTTON -->
+                        <button onclick="downloadPDF()" class="text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all shadow-sm">
+                            <i class="fa-solid fa-file-pdf"></i> पीडीएफ डाउनलोड (Download PDF)
+                        </button>
+                        <button onclick="window.print()" class="text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all text-theme-icon bg-theme-light border-theme-light">
+                            <i class="fa-solid fa-print"></i> प्रिन्ट गर्नुहोस् (Print)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Responsive Table Wrapper -->
+                <div class="overflow-x-auto rounded-xl border border-slate-100">
+                    <table class="w-full text-sm text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 font-bold border-b border-slate-100">
+                                <th class="p-3.5">स्टाफको नाम (Staff)</th>
+                                <th class="p-3.5 text-center">आइतबार</th>
+                                <th class="p-3.5 text-center">सोमबार</th>
+                                <th class="p-3.5 text-center">मंगलबार</th>
+                                <th class="p-3.5 text-center">बुधबार</th>
+                                <th class="p-3.5 text-center">बिहीबार</th>
+                                <th class="p-3.5 text-center">शुक्रबार</th>
+                                <th class="p-3.5 text-center">शनिबार</th>
+                                <th class="p-3.5 text-center bg-indigo-50/50 text-indigo-600 font-black text-theme">उपस्थिति (Attd)</th>
+                                <th class="p-3.5 text-center bg-amber-50 text-amber-800">साप्ताहिक बिक्री लक्ष्य/प्राप्त</th>
+                                <th class="p-3.5 text-center bg-emerald-50 text-emerald-800">जम्मा काम सम्पन्न</th>
+                            </tr>
+                        </thead>
+                        <tbody id="weekly-report-rows">
+                            <!-- Dynamic Report Rows will go here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+    </main>
+
+    <!-- Footer (Hidden on mobile to preserve spacing for iOS Tab bar) -->
+    <footer class="bg-slate-950 text-slate-500 text-center py-6 mt-8 border-t border-slate-900 text-xs px-4 hidden lg:block">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+            <p id="footer-branding-text">© २०२६ हाम्रो डिजिटल पसल। सबै अधिकार सुरक्षित।</p>
+            <p>नेपाली व्यवसायीहरूको सहजता र एआई सशक्तीकरणको लागि ❤️</p>
+        </div>
+    </footer>
+
+    <!-- ==========================================================================
+         📱 NATIVE iOS APP-LIKE BOTTOM TAB NAVIGATION BAR (Visible on Mobile Only)
+         ========================================================================== -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200/80 px-3 py-2 flex justify-around items-center z-40 lg:hidden shadow-lg no-print">
+        <button onclick="switchMobileTab('dashboard')" id="mobile-btn-dashboard" class="flex flex-col items-center justify-center text-indigo-600 text-theme transition-all">
+            <i class="fa-solid fa-chart-simple text-lg"></i>
+            <span class="text-[9px] font-black mt-1">ड्यासबोर्ड</span>
+        </button>
+        <button onclick="switchMobileTab('checklist')" id="mobile-btn-checklist" class="flex flex-col items-center justify-center text-slate-400 transition-all">
+            <i class="fa-solid fa-list-check text-lg"></i>
+            <span class="text-[9px] font-black mt-1">चेकलिस्ट</span>
+        </button>
+        <button onclick="switchMobileTab('attendance')" id="mobile-btn-attendance" class="flex flex-col items-center justify-center text-slate-400 transition-all">
+            <i class="fa-solid fa-calendar-days text-lg"></i>
+            <span class="text-[9px] font-black mt-1">हाजिरी/बिक्री</span>
+        </button>
+        <button onclick="switchMobileTab('ai')" id="mobile-btn-ai" class="flex flex-col items-center justify-center text-slate-400 transition-all">
+            <i class="fa-solid fa-wand-magic-sparkles text-lg"></i>
+            <span class="text-[9px] font-black mt-1">एआई कोच</span>
+        </button>
+        <button onclick="switchMobileTab('report')" id="mobile-btn-report" class="flex flex-col items-center justify-center text-slate-400 transition-all">
+            <i class="fa-solid fa-file-invoice text-lg"></i>
+            <span class="text-[9px] font-black mt-1">रिपोर्ट</span>
+        </button>
+    </div>
+
+    <!-- BRANDING & ACCESSORIES CUSTOMIZATION MODAL -->
+    <div id="branding-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white p-6 rounded-2xl shadow-xl border border-slate-100 max-w-md w-full m-4 space-y-4 transform scale-95 transition-transform duration-300 flex flex-col" id="branding-modal-content">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="text-md font-black text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-indigo-600"></i> व्यवसाय ब्रान्डिङ र सजावट
+                </h3>
+                <button onclick="closeBrandingModal()" class="text-slate-400 hover:text-slate-600 text-xl p-1">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4 text-xs font-semibold">
+                <div class="space-y-1">
+                    <label class="block text-slate-400">व्यवसायको नाम (Business Name)</label>
+                    <input type="text" id="brand-input-name" placeholder="उदा: काठमाडौँ क्याफे, सुलभ मार्ट" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="block text-slate-400">उपशीर्षक/स्लोगन (Tagline)</label>
+                    <input type="text" id="brand-input-tagline" placeholder="उदा: क्वालिटी र मुस्कान सहितको सेवा" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="block text-slate-400">ब्रान्ड लोगो आइकन (Logo Icon)</label>
+                    <div class="grid grid-cols-5 gap-2" id="logo-icon-options">
+                        <button onclick="selectBrandIcon('store')" id="logo-opt-store" class="p-3 border rounded-xl hover:bg-slate-50 text-lg transition-all text-slate-700 flex items-center justify-center"><i class="fa-solid fa-store"></i></button>
+                        <button onclick="selectBrandIcon('coffee')" id="logo-opt-coffee" class="p-3 border rounded-xl hover:bg-slate-50 text-lg transition-all text-slate-700 flex items-center justify-center"><i class="fa-solid fa-mug-hot"></i></button>
+                        <button onclick="selectBrandIcon('bag')" id="logo-opt-bag" class="p-3 border rounded-xl hover:bg-slate-50 text-lg transition-all text-slate-700 flex items-center justify-center"><i class="fa-solid fa-bag-shopping"></i></button>
+                        <button onclick="selectBrandIcon('utensils')" id="logo-opt-utensils" class="p-3 border rounded-xl hover:bg-slate-50 text-lg transition-all text-slate-700 flex items-center justify-center"><i class="fa-solid fa-utensils"></i></button>
+                        <button onclick="selectBrandIcon('laptop')" id="logo-opt-laptop" class="p-3 border rounded-xl hover:bg-slate-50 text-lg transition-all text-slate-700 flex items-center justify-center"><i class="fa-solid fa-laptop"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 border-t border-slate-100 pt-3">
+                <button type="button" onclick="closeBrandingModal()" class="px-5 py-2.5 text-xs font-extrabold bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-all">रद्द गर्नुहोस्</button>
+                <button type="button" onclick="saveBrandingData()" class="px-5 py-2.5 text-xs font-extrabold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-sm transition-all btn-theme">परिवर्तन सुरक्षित गर्नुहोस्</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- STAFF MANAGEMENT MODAL (FULLY DYNAMIC) -->
+    <div id="staff-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white p-6 rounded-2xl shadow-xl border border-slate-100 max-w-2xl w-full m-4 space-y-4 transform scale-95 transition-transform duration-300 flex flex-col max-h-[90vh]" id="staff-modal-content">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="text-lg font-black text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-user-gear text-indigo-600 text-theme-icon"></i> स्टाफ व्यवस्थापन र थपघट
+                </h3>
+                <button onclick="closeStaffSettingsModal()" class="text-slate-400 hover:text-slate-600 text-xl p-1">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <p class="text-xs text-slate-400 leading-relaxed">तपाईंको स्टाफहरूको नाम र भूमिका सम्पादन गर्नुहोस्, वा नयाँ स्टाफ थप्नुहोस्।</p>
+            
+            <!-- Add New Staff Sub-form -->
+            <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200/80 space-y-2">
+                <h4 class="text-xs font-extrabold text-slate-600 uppercase tracking-wider">नयाँ स्टाफ थप्नुहोस्</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-5 gap-2">
+                    <input type="text" id="add-staff-name" placeholder="स्टाफको नाम (उदा: राम श्रेष्ठ)" class="sm:col-span-2 p-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <input type="text" id="add-staff-role" placeholder="भूमिका (उदा: सफाइ/काउन्टर)" class="sm:col-span-2 p-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <button onclick="addNewStaffMember()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs p-2 rounded-lg transition-all flex items-center justify-center gap-1 btn-theme">
+                        <i class="fa-solid fa-user-plus"></i> थप्नुहोस्
+                    </button>
+                </div>
+            </div>
+
+            <!-- Staff List Container -->
+            <div class="flex-grow overflow-y-auto custom-scrollbar pr-1 max-h-[300px]">
+                <h4 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-2">हाल कार्यरत स्टाफहरूको सूची</h4>
+                <div id="modal-staff-list" class="space-y-2">
+                    <!-- Loaded dynamically via JavaScript -->
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 border-t border-slate-100 pt-3">
+                <button type="button" onclick="closeStaffSettingsModal()" class="px-5 py-2.5 text-xs font-extrabold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-sm transition-all btn-theme">सेभ र बन्द गर्नुहोस्</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CUSTOM CONFIRMATION MODAL (No Alert alternative) -->
+    <div id="confirm-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white p-6 rounded-2xl shadow-xl border border-slate-100 max-w-sm w-full m-4 space-y-4 transform scale-95 transition-transform duration-300" id="confirm-modal-content">
+            <div class="text-center space-y-3">
+                <div class="w-12 h-12 bg-red-50 text-red-500 rounded-full flex items-center justify-center text-xl mx-auto">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <h3 class="text-md font-bold text-slate-800" id="confirm-modal-title">के तपाईं निश्चित हुनुहुन्छ?</h3>
+                <p class="text-xs text-slate-400 leading-relaxed" id="confirm-modal-desc">यो कार्य फिर्ता गर्न सकिने छैन।</p>
+            </div>
+            <div class="flex justify-center gap-2 pt-2">
+                <button id="confirm-modal-btn-cancel" class="px-4 py-2 text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition-all">रद्द गर्नुहोस्</button>
+                <button id="confirm-modal-btn-confirm" class="px-4 py-2 text-xs font-bold bg-red-600 hover:bg-red-700 text-white rounded-xl transition-all">हो, निश्चित छ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📱 iOS SAFARI INSTALL MANUAL MODAL -->
+    <div id="ios-guide-modal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-50 flex items-end sm:items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white p-6 rounded-t-3xl sm:rounded-2xl shadow-2xl border border-slate-100 max-w-md w-full m-0 sm:m-4 space-y-4 transform translate-y-10 sm:translate-y-0 sm:scale-95 transition-transform duration-300 flex flex-col" id="ios-guide-modal-content">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="text-md font-black text-slate-800 flex items-center gap-2">
+                    <i class="fa-brands fa-apple text-xl text-slate-950"></i> iPhone मा App थप्ने तरिका
+                </h3>
+                <button onclick="closeIosGuideModal()" class="text-slate-400 hover:text-slate-600 text-xl p-1">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4 text-xs font-semibold text-slate-600 leading-relaxed">
+                <p class="text-[13px] text-slate-500">तपाईंका स्टाफहरूको iPhone मा एउटा एप जस्तै चलाउन तलका ३ वटा सजिला स्टेपहरू पूरा गर्नुहोस्:</p>
+                
+                <div class="space-y-3.5">
+                    <div class="flex items-start gap-3">
+                        <span class="w-6 h-6 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 font-bold flex items-center justify-center shrink-0">१</span>
+                        <p class="mt-0.5">आफ्नो iPhone को <strong class="text-slate-900">Safari</strong> ब्राउजरमा मात्र यो वेबसाइट खोल्नुहोस्।</p>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <span class="w-6 h-6 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 font-bold flex items-center justify-center shrink-0">२</span>
+                        <p class="mt-0.5">Safari ब्राउजरको तल रहेको <strong class="text-slate-900">Share (सेयर)</strong> आइकन <i class="fa-solid fa-share-from-square text-indigo-600 mx-1"></i> मा ट्याप गर्नुहोस्।</p>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <span class="w-6 h-6 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 font-bold flex items-center justify-center shrink-0">३</span>
+                        <p class="mt-0.5">अलि तल स्क्रोल गरेर <strong class="text-slate-900">"Add to Home Screen (होम स्क्रिनमा थप्नुहोस्)"</strong> विकल्प थिच्नुहोस् र सेभ गर्नुहोस्।</p>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-emerald-50 text-emerald-800 rounded-xl border border-emerald-100 text-center font-bold">
+                    🎉 अब यो तपाईंका स्टाफहरूको होम स्क्रिनमा एउटा सुन्दर एप जस्तै आउनेछ!
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-3">
+                <button onclick="closeIosGuideModal()" class="w-full sm:w-auto px-5 py-2.5 text-xs font-extrabold bg-slate-900 hover:bg-slate-950 text-white rounded-xl shadow-sm transition-all">बुझें, बन्द गर्नुहोस्</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification system instead of alert -->
+    <div id="toast-container" class="fixed bottom-24 lg:bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
+
+    <!-- JAVASCRIPT LOGIC WITH GEMINI API INTEGRATIONS -->
+    <script>
+        // API Key configuration. Empty string means Canvas background handler will inject the key automatically!
+        const apiKey = "";
+        
+        // Default Days (Starting with Sunday as standard working week in Nepal)
+        const DAYS = [
+            { key: 'sun', np: 'आइतबार', en: 'Sunday' },
+            { key: 'mon', np: 'सोमबार', en: 'Monday' },
+            { key: 'tue', np: 'मंगलबार', en: 'Tuesday' },
+            { key: 'wed', np: 'बुधबार', en: 'Wednesday' },
+            { key: 'thu', np: 'बिहीबार', en: 'Thursday' },
+            { key: 'fri', np: 'शुक्रबार', en: 'Friday' },
+            { key: 'sat', np: 'शनिबार', en: 'Saturday' }
+        ];
+
+        // Initial default staff details
+        let staffs = [
+            { id: 0, name: 'सुरेश श्रेष्ठ', role: 'सञ्चालन (Operations)' },
+            { id: 1, name: 'सीता कार्की', role: 'बजार/मार्केटिङ (Marketing)' },
+            { id: 2, name: 'हरी शर्मा', role: 'प्रशासन/लेखा (Accounts)' }
+        ];
+
+        // Predefined Task Templates
+        const defaultTasks = {
+            0: {
+                sun: [
+                    { id: 't1_1', title: 'कार्यालय/पसल बिहान समयमै खोल्ने र सफाइ गर्ने', done: false },
+                    { id: 't1_2', title: 'सामानको स्टक जाँच गर्ने र नपुग सामान टिपाउने', done: false },
+                    { id: 't1_3', title: 'ग्राहकहरूलाई बिलिङ र भुक्तानी सेवा प्रदान गर्ने', done: false },
+                    { id: 't1_4', title: 'पसल बन्द गर्दा ताला र सुरक्षा संयन्त्र जाँच गर्ने', done: false }
+                ],
+                mon: [{ id: 't1_5', title: 'सफाइ र डिस्प्ले व्यवस्थापन गर्ने', done: false }],
+                tue: [{ id: 't1_8', title: 'स्टोरको भौतिक गणना (Inventory count) रुजु गर्ने', done: false }],
+                wed: [{ id: 't1_10', title: 'फोहोर व्यवस्थापन र बाहिरको सरसफाई हेर्ने', done: false }],
+                thu: [{ id: 't1_12', title: 'सप्लायरसँग आउने सामानहरूको बारेमा फलोअप गर्ने', done: false }],
+                fri: [{ id: 't1_14', title: 'सुरक्षा क्यामरा र बत्तीहरू बन्द / चालु अवस्था परीक्षण गर्ने', done: false }],
+                sat: [{ id: 't1_16', title: 'शनिबार सरसफाई विशेष (हाफ डे वा होलिडे तयारी)', done: false }]
+            },
+            1: {
+                sun: [
+                    { id: 't2_1', title: 'इमेलहरू र सामाजिक सञ्जालका सन्देशहरू जाँच गर्ने', done: false },
+                    { id: 't2_2', title: 'नयाँ ग्राहकहरूसँग सम्पर्क स्थापित गर्ने', done: false },
+                    { id: 't2_3', title: 'दैनिक सोसल मिडिया पोष्ट र विज्ञापनको कार्य गर्ने', done: false }
+                ],
+                mon: [{ id: 't2_5', title: 'संभावित ग्राहकहरूलाई कल र फलोअप गर्ने', done: false }],
+                tue: [{ id: 't2_7', title: 'विज्ञापनको बजेट र नतिजाको समीक्षा गर्ने', done: false }],
+                wed: [{ id: 't2_9', title: 'इमेल न्यूजलेटर वा प्रमोशनल सन्देशहरू ड्राफ्ट गर्ने', done: false }],
+                thu: [{ id: 't2_11', title: 'बिक्री वृद्धिका लागि नयाँ अफर योजना बनाउने', done: false }],
+                fri: [{ id: 't2_13', title: 'यस हप्ताको कुल बिक्री र रिपोर्ट तयार गर्ने', done: false }],
+                sat: [{ id: 't2_15', title: 'शनिबार विशेष प्रमोसन सामग्री योजना गर्ने', done: false }]
+            },
+            2: {
+                sun: [
+                    { id: 't3_1', title: 'दैनिक नगद कारोबार (कैस बक्स) चेक र रुजु गर्ने', done: false },
+                    { id: 't3_2', title: 'स्टाफ हाजिरी र समय रेकर्ड गर्ने', done: false },
+                    { id: 't3_3', title: 'कार्यालयका आवश्यक फाइल र बिलहरू व्यवस्थापन गर्ने', done: false }
+                ],
+                mon: [{ id: 't3_5', title: 'बैंक मौज्दात र भौचरहरू मिलान गर्ने', done: false }],
+                tue: [{ id: 't3_7', title: 'सप्लायर तथा विक्रेताहरूको भुक्तानी तालिका रुजु गर्ने', done: false }],
+                wed: [{ id: 't3_9', title: 'कर (Tax/VAT) सम्बन्धी कागजातहरू मिलाउने', done: false }],
+                thu: [{ id: 't3_11', title: 'आगामी हप्ताको बजेट आवश्यकता प्रक्षेपण गर्ने', done: false }],
+                fri: [{ id: 't3_13', title: 'हप्ताभरिको आम्दानी र खर्चको विवरण साहुलाई बुझाउने', done: false }],
+                sat: [{ id: 't3_15', title: 'शनिबार साताको खाता मिलान अन्तिम रूप दिने', done: false }]
+            }
+        };
+
+        // Branding, Attendance and Sales states
+        let businessName = "हाम्रो डिजिटल पसल र क्याफे";
+        let businessTagline = "क्वालिटी र मुस्कुराउँदो सेवा";
+        let businessIcon = "store"; // store, coffee, bag, utensils, laptop
+        let businessTheme = "indigo"; // indigo, emerald, violet, rose, amber
+
+        let attendance = {}; // attendance[staffId][dayKey] = 'P' (Present), 'A' (Absent), 'H' (HalfDay), 'O' (Off)
+        let salesPerformance = {}; // salesPerformance[staffId] = { target: 10000, achieved: 8500 }
+
+        // Current active states
+        let activeDay = 'sun';
+        let activeStaff = 0;
+        let tasks = {};
+        let chartInstance = null;
+        let activeChartDataType = 'tasks'; // 'tasks' or 'sales'
+        let generatedAITasksDraft = []; 
+        let aiAudioFeedbackBlobUrl = null; 
+        let selectedIconForBrand = 'store';
+
+        // Cloud sync engine variables
+        let isCloudSyncActive = false;
+        let syncShopCode = "";
+        let syncIntervalId = null;
+        const CLOUD_STORAGE_BUCKET_ID = "7pY8N4uC5v3kMx9s2qWe1r_nepal_sync"; 
+
+        // Live Nepali time helper
+        function toNepaliNumerals(num) {
+            const nepaliDigits = ['०', '१', '२', '३', '४', '५', '६', '७', '८', '९'];
+            return num.toString().split('').map(digit => {
+                return nepaliDigits[digit] || digit;
+            }).join('');
+        }
+
+        // Updated function to force-display absolute Nepal Standard Time (UTC+5:45)
+        function updateLiveClock() {
+            const now = new Date();
+            // Get UTC time milliseconds
+            const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+            // Nepal Offset is UTC + 5:45 (5.75 hours)
+            const nepalTimezoneOffset = 5.75 * 60 * 60 * 1000;
+            const nepalTime = new Date(utcTime + nepalTimezoneOffset);
+
+            let hours = nepalTime.getHours();
+            const minutes = nepalTime.getMinutes();
+            const seconds = nepalTime.getSeconds();
+            const ampm = hours >= 12 ? 'अपराह्न (PM)' : 'पूर्वाह्न (AM)';
+            
+            hours = hours % 12;
+            hours = hours ? hours : 12; // the hour '0' should be '12'
+            
+            const minutesStr = minutes < 10 ? '0' + minutes : minutes;
+            const secondsStr = seconds < 10 ? '0' + seconds : seconds;
+            
+            // Format to Nepali digits
+            const formattedTime = `${toNepaliNumerals(hours)}:${toNepaliNumerals(minutesStr)}:${toNepaliNumerals(secondsStr)} ${ampm}`;
+            document.getElementById('live-time').innerHTML = `<i class="fa-regular fa-clock mr-1"></i> ${formattedTime}`;
+
+            // Formatting date inside clock widget based on Nepal Local date
+            const nepaliDates = {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            };
+            const formattedDateString = nepalTime.toLocaleDateString('ne-NP', nepaliDates);
+            document.getElementById('live-date').innerText = formattedDateString;
+            
+            // UPDATE PRINTABLE-ONLY DATE HEADER
+            const printDateEl = document.getElementById('print-date');
+            if (printDateEl) {
+                printDateEl.innerText = `प्रिन्ट मिति: ${formattedDateString}`;
+            }
+        }
+
+        // Initialize App State
+        function initializeApp() {
+            const savedTasks = localStorage.getItem('staff_checklist_tasks_2026');
+            const savedStaffs = localStorage.getItem('staff_checklist_members');
+            const savedSyncCode = localStorage.getItem('staff_sync_shop_code');
+            
+            // Branding & theme loads
+            const savedName = localStorage.getItem('staff_business_name');
+            const savedTagline = localStorage.getItem('staff_business_tagline');
+            const savedIcon = localStorage.getItem('staff_business_icon');
+            const savedTheme = localStorage.getItem('staff_business_theme');
+
+            // Attendance & Sales loads
+            const savedAttendance = localStorage.getItem('staff_attendance');
+            const savedSales = localStorage.getItem('staff_sales');
+
+            if (savedName) businessName = savedName;
+            if (savedTagline) businessTagline = savedTagline;
+            if (savedIcon) businessIcon = savedIcon;
+            if (savedTheme) businessTheme = savedTheme;
+
+            applyBrandingUI();
+            changeThemeColor(businessTheme, false);
+
+            if (savedStaffs) {
+                staffs = JSON.parse(savedStaffs);
+            } else {
+                localStorage.setItem('staff_checklist_members', JSON.stringify(staffs));
+            }
+
+            if (savedTasks) {
+                tasks = JSON.parse(savedTasks);
+            } else {
+                tasks = JSON.parse(JSON.stringify(defaultTasks));
+                saveToLocalStorage();
+            }
+
+            // Load or Initialize Attendance & Sales
+            if (savedAttendance) {
+                attendance = JSON.parse(savedAttendance);
+            } else {
+                initDefaultAttendance();
+            }
+
+            if (savedSales) {
+                salesPerformance = JSON.parse(savedSales);
+            } else {
+                initDefaultSales();
+            }
+
+            // Fallback for active staff in case staff list changes
+            if (staffs.length > 0) {
+                const stillExists = staffs.some(s => s.id === activeStaff);
+                if (!stillExists) {
+                    activeStaff = staffs[0].id;
+                }
+            } else {
+                activeStaff = null;
+            }
+
+            // Set Clock interval
+            setInterval(updateLiveClock, 1000);
+            updateLiveClock();
+
+            // Load saved Cloud Sync settings if active
+            if (savedSyncCode) {
+                document.getElementById('cloud-shop-code').value = savedSyncCode;
+                enableCloudSync(true); 
+            }
+
+            renderDaysSelector();
+            renderStaffSelector();
+            updateWorkspace();
+            renderAttendanceAndSales();
+            renderWeeklyReport();
+            updateKPIs();
+            initChart();
+
+            // Check if on mobile on init to set the tab properly
+            if (window.innerWidth < 1024) {
+                switchMobileTab('dashboard');
+            }
+        }
+
+        function initDefaultAttendance() {
+            attendance = {};
+            staffs.forEach(s => {
+                attendance[s.id] = {
+                    sun: 'P', mon: 'P', tue: 'P', wed: 'P', thu: 'P', fri: 'P', sat: 'O'
+                };
+            });
+            localStorage.setItem('staff_attendance', JSON.stringify(attendance));
+        }
+
+        function initDefaultSales() {
+            salesPerformance = {};
+            staffs.forEach(s => {
+                salesPerformance[s.id] = { target: 20000, achieved: 14000 };
+            });
+            localStorage.setItem('staff_sales', JSON.stringify(salesPerformance));
+        }
+
+        // Save state to local storage and sync to cloud if enabled
+        function saveToLocalStorage() {
+            localStorage.setItem('staff_checklist_tasks_2026', JSON.stringify(tasks));
+            localStorage.setItem('staff_attendance', JSON.stringify(attendance));
+            localStorage.setItem('staff_sales', JSON.stringify(salesPerformance));
+            
+            localStorage.setItem('staff_business_name', businessName);
+            localStorage.setItem('staff_business_tagline', businessTagline);
+            localStorage.setItem('staff_business_icon', businessIcon);
+            localStorage.setItem('staff_business_theme', businessTheme);
+
+            if (isCloudSyncActive) {
+                pushDataToCloud();
+            }
+        }
+
+        /* ==========================================================================
+           📱 MOBILE TAB SWITCHER LOGIC
+           ========================================================================== */
+        function switchMobileTab(tabId) {
+            // Hide all tab contents
+            const contents = document.querySelectorAll('.mobile-tab-content');
+            contents.forEach(el => el.classList.remove('active'));
+
+            // Show selected tab content
+            const activeContent = document.getElementById(`mobile-tab-${tabId}`);
+            if (activeContent) {
+                activeContent.classList.add('active');
+            }
+
+            // Update mobile tab buttons style
+            const tabs = ['dashboard', 'checklist', 'attendance', 'ai', 'report'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`mobile-btn-${t}`);
+                if (btn) {
+                    if (t === tabId) {
+                        btn.classList.add('text-indigo-600', 'text-theme');
+                        btn.classList.remove('text-slate-400');
+                    } else {
+                        btn.classList.remove('text-indigo-600', 'text-theme');
+                        btn.classList.add('text-slate-400');
+                    }
+                }
+            });
+
+            // Trigger chart update on dashboard tab active to fix rendering bugs on mobile
+            if (tabId === 'dashboard') {
+                setTimeout(updateChart, 100);
+            }
+        }
+
+        // iOS guide modal toggles
+        function openIosGuideModal() {
+            const modal = document.getElementById('ios-guide-modal');
+            const content = document.getElementById('ios-guide-modal-content');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('translate-y-10', 'sm:scale-95');
+            }, 10);
+        }
+
+        function closeIosGuideModal() {
+            const modal = document.getElementById('ios-guide-modal');
+            const content = document.getElementById('ios-guide-modal-content');
+            modal.classList.add('opacity-0');
+            content.classList.add('translate-y-10', 'sm:scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        /* ==========================================================================
+           CLOUD SYNC CORE ENGINE FUNCTIONS
+           ========================================================================== */
+        async function enableCloudSync(silent = false) {
+            const codeInput = document.getElementById('cloud-shop-code');
+            const code = codeInput.value.trim().toLowerCase().replace(/[^a-z0-9_-]/g, "");
+
+            if (!code) {
+                showToast("कृपया पहिले आफ्नो पसलको कोड प्रविष्टि गर्नुहोस् !", "error");
+                return;
+            }
+
+            syncShopCode = code;
+            isCloudSyncActive = true;
+            localStorage.setItem('staff_sync_shop_code', syncShopCode);
+
+            document.getElementById('sync-status-indicator').classList.remove('hidden');
+            document.getElementById('active-sync-code').innerText = syncShopCode;
+            document.getElementById('btn-disconnect').classList.remove('hidden');
+
+            if (!silent) {
+                showToast("क्लाउड सिङ्क जडान गरिँदैछ...");
+            }
+
+            await pullDataFromCloud(silent);
+
+            if (syncIntervalId) clearInterval(syncIntervalId);
+            syncIntervalId = setInterval(() => {
+                pullDataFromCloud(true); 
+            }, 10000);
+        }
+
+        function disableCloudSync() {
+            isCloudSyncActive = false;
+            syncShopCode = "";
+            localStorage.removeItem('staff_sync_shop_code');
+            if (syncIntervalId) {
+                clearInterval(syncIntervalId);
+                syncIntervalId = null;
+            }
+
+            document.getElementById('sync-status-indicator').classList.add('hidden');
+            document.getElementById('btn-disconnect').classList.add('hidden');
+            document.getElementById('cloud-shop-code').value = "";
+            showToast("क्लाउड सिङ्क विच्छेद गरियो।", "error");
+        }
+
+        // Pull database from cloud
+        async function pullDataFromCloud(silent = false) {
+            if (!isCloudSyncActive || !syncShopCode) return;
+
+            const url = `https://kvdb.io/${CLOUD_STORAGE_BUCKET_ID}/${syncShopCode}`;
+
+            try {
+                const response = await fetch(url);
+                if (response.status === 404) {
+                    if (!silent) showToast("नयाँ कोड भेटियो! स्थानीय डाटा क्लाउडमा पठाइँदैछ...");
+                    await pushDataToCloud();
+                    return;
+                }
+
+                if (!response.ok) throw new Error("Could not pull cloud database");
+
+                const cloudPayload = await response.json();
+
+                if (cloudPayload && cloudPayload.tasks && cloudPayload.staffs) {
+                    tasks = cloudPayload.tasks;
+                    staffs = cloudPayload.staffs;
+                    
+                    // Pull Attendance and Sales as well!
+                    if (cloudPayload.attendance) attendance = cloudPayload.attendance;
+                    if (cloudPayload.salesPerformance) salesPerformance = cloudPayload.salesPerformance;
+                    
+                    // Pull branding details
+                    if (cloudPayload.businessName) businessName = cloudPayload.businessName;
+                    if (cloudPayload.businessTagline) businessTagline = cloudPayload.businessTagline;
+                    if (cloudPayload.businessIcon) businessIcon = cloudPayload.businessIcon;
+                    if (cloudPayload.businessTheme) businessTheme = cloudPayload.businessTheme;
+
+                    localStorage.setItem('staff_checklist_tasks_2026', JSON.stringify(tasks));
+                    localStorage.setItem('staff_checklist_members', JSON.stringify(staffs));
+                    localStorage.setItem('staff_attendance', JSON.stringify(attendance));
+                    localStorage.setItem('staff_sales', JSON.stringify(salesPerformance));
+                    localStorage.setItem('staff_business_name', businessName);
+                    localStorage.setItem('staff_business_tagline', businessTagline);
+                    localStorage.setItem('staff_business_icon', businessIcon);
+                    localStorage.setItem('staff_business_theme', businessTheme);
+
+                    // Re-adjust theme & brand view
+                    applyBrandingUI();
+                    changeThemeColor(businessTheme, false);
+
+                    if (staffs.length > 0 && !staffs.some(s => s.id === activeStaff)) {
+                        activeStaff = staffs[0].id;
+                    }
+
+                    renderDaysSelector();
+                    renderStaffSelector();
+                    updateWorkspace();
+                    renderAttendanceAndSales();
+                    renderWeeklyReport();
+                    updateKPIs();
+                    updateChart();
+
+                    const now = new Date();
+                    document.getElementById('last-sync-time').innerText = now.toLocaleTimeString('ne-NP');
+                    if (!silent) showToast("डाटा क्लाउडबाट सफलतापूर्वक सिङ्क गरियो!");
+                }
+            } catch (error) {
+                console.error("Cloud Pull Error:", error);
+                if (!silent) showToast("क्लाउड सिङ्क असफल। नेटवर्क जाँच गर्नुहोस्।", "error");
+            }
+        }
+
+        // Push state to Cloud Storage
+        async function pushDataToCloud() {
+            if (!isCloudSyncActive || !syncShopCode) return;
+
+            const url = `https://kvdb.io/${CLOUD_STORAGE_BUCKET_ID}/${syncShopCode}`;
+            const payload = {
+                tasks,
+                staffs,
+                attendance,
+                salesPerformance,
+                businessName,
+                businessTagline,
+                businessIcon,
+                businessTheme
+            };
+
+            try {
+                await fetch(url, {
+                    method: 'POST',
+                    body: JSON.stringify(payload),
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const now = new Date();
+                document.getElementById('last-sync-time').innerText = now.toLocaleTimeString('ne-NP');
+            } catch (error) {
+                console.error("Cloud Push Error:", error);
+            }
+        }
+
+        /* ==========================================================================
+           BRANDING, LOGO & THEME OPTIONS
+           ========================================================================== */
+        function openBrandingModal() {
+            document.getElementById('brand-input-name').value = businessName;
+            document.getElementById('brand-input-tagline').value = businessTagline;
+            selectBrandIcon(businessIcon);
+
+            const modal = document.getElementById('branding-modal');
+            const content = document.getElementById('branding-modal-content');
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeBrandingModal() {
+            const modal = document.getElementById('branding-modal');
+            const content = document.getElementById('branding-modal-content');
+
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function selectBrandIcon(iconName) {
+            selectedIconForBrand = iconName;
+            const options = ['store', 'coffee', 'bag', 'utensils', 'laptop'];
+            options.forEach(opt => {
+                const btn = document.getElementById(`logo-opt-${opt}`);
+                if (opt === iconName) {
+                    btn.className = "p-3 border-2 border-indigo-600 bg-indigo-50 rounded-xl text-lg text-indigo-700 flex items-center justify-center font-bold";
+                } else {
+                    btn.className = "p-3 border border-slate-200 hover:bg-slate-50 text-lg transition-all text-slate-700 flex items-center justify-center";
+                }
+            });
+        }
+
+        function saveBrandingData() {
+            const nameVal = document.getElementById('brand-input-name').value.trim();
+            const taglineVal = document.getElementById('brand-input-tagline').value.trim();
+
+            if (!nameVal) {
+                showToast("व्यवसायको नाम खाली हुन सक्दैन!", "error");
+                return;
+            }
+
+            businessName = nameVal;
+            businessTagline = taglineVal;
+            businessIcon = selectedIconForBrand;
+
+            applyBrandingUI();
+            saveToLocalStorage();
+            closeBrandingModal();
+            showToast("ब्रान्डिङ कस्टमाइजेसन सुरक्षित गरियो!");
+        }
+
+        function applyBrandingUI() {
+            document.getElementById('header-business-name').innerText = businessName;
+            document.getElementById('header-business-sub').innerText = businessTagline;
+
+            // UPDATE PRINTABLE HEADERS WITH ACTIVE DATA
+            const printName = document.getElementById('print-business-name');
+            const printSub = document.getElementById('print-business-tagline');
+            if (printName) printName.innerText = businessName;
+            if (printSub) printSub.innerText = businessTagline;
+
+            const iconSpan = document.getElementById('header-logo-icon');
+            let iconClass = "fa-solid fa-store";
+            if (businessIcon === 'coffee') iconClass = "fa-solid fa-mug-hot";
+            if (businessIcon === 'bag') iconClass = "fa-solid fa-bag-shopping";
+            if (businessIcon === 'utensils') iconClass = "fa-solid fa-utensils";
+            if (businessIcon === 'laptop') iconClass = "fa-solid fa-laptop";
+
+            iconSpan.innerHTML = `<i class="${iconClass} animate-pulse"></i>`;
+        }
+
+        // Dropdown Theme menu toggle
+        function toggleThemeMenu() {
+            const menu = document.getElementById('theme-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        window.addEventListener('click', function(e) {
+            const menu = document.getElementById('theme-menu');
+            if (menu && !menu.contains(e.target) && !e.target.closest('button')) {
+                menu.classList.add('hidden');
+            }
+        });
+
+        // Change App Theme color
+        function changeThemeColor(color, save = true) {
+            businessTheme = color;
+            const header = document.getElementById('app-header');
+            
+            // Remove previous color gradients from header
+            header.className = header.className.replace(/from-\w+-\d+ via-\w+-\d+ to-\w+-\d+/, "");
+            header.className = header.className.replace(/from-\w+-\d+ to-\w+-\d+/, "");
+
+            // Pre-defined premium accessory colors
+            let gradClass = "from-indigo-900 via-purple-800 to-indigo-950"; // default
+            let textThemeElements = document.querySelectorAll('.text-theme');
+            let bgThemeElements = document.querySelectorAll('.bg-theme');
+            let bgThemeLightElements = document.querySelectorAll('.bg-theme-light');
+            let textThemeIconElements = document.querySelectorAll('.text-theme-icon');
+            let buttonsTheme = document.querySelectorAll('.btn-theme');
+
+            let hexMain = '#6366f1';
+            let hexHover = '#4f46e5';
+
+            if (color === 'emerald') {
+                gradClass = "from-emerald-900 via-teal-800 to-emerald-950";
+                hexMain = '#10b981';
+            } else if (color === 'violet') {
+                gradClass = "from-purple-900 via-fuchsia-800 to-purple-950";
+                hexMain = '#a855f7';
+            } else if (color === 'rose') {
+                gradClass = "from-rose-900 via-pink-800 to-rose-950";
+                hexMain = '#f43f5e';
+            } else if (color === 'amber') {
+                gradClass = "from-amber-800 via-orange-700 to-amber-950";
+                hexMain = '#f59e0b';
+            }
+
+            header.classList.add(...gradClass.split(' '));
+
+            // Dynamically alter tailwind accessory accents
+            textThemeElements.forEach(el => {
+                el.style.color = hexMain;
+            });
+            bgThemeElements.forEach(el => {
+                el.style.backgroundColor = hexMain;
+            });
+            buttonsTheme.forEach(el => {
+                el.style.backgroundColor = hexMain;
+            });
+
+            if (save) {
+                saveToLocalStorage();
+                renderStaffSelector();
+                updateWorkspace();
+                showToast("थिम कलर परिवर्तन गरियो !");
+            }
+        }
+
+        /* ==========================================================================
+           ATTENDANCE & SALES PERFORMANCE HANDLERS
+           ========================================================================== */
+        function renderAttendanceAndSales() {
+            const container = document.getElementById('attendance-sales-container');
+            container.innerHTML = '';
+
+            if (staffs.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 text-center py-4 font-semibold">कुनै स्टाफ उपलब्ध छैन। कृपया पहिला 'स्टाफ व्यवस्थापन' मा गई थप्नुहोस्।</p>`;
+                return;
+            }
+
+            staffs.forEach(staff => {
+                // Insure structures
+                if (!attendance[staff.id]) {
+                    attendance[staff.id] = { sun: 'P', mon: 'P', tue: 'P', wed: 'P', thu: 'P', fri: 'P', sat: 'O' };
+                }
+                if (!salesPerformance[staff.id]) {
+                    salesPerformance[staff.id] = { target: 10000, achieved: 0 };
+                }
+
+                const sSales = salesPerformance[staff.id];
+                const salesPercent = sSales.target > 0 ? Math.round((sSales.achieved / sSales.target) * 100) : 0;
+
+                const wrapper = document.createElement('div');
+                wrapper.className = "py-4 first:pt-0 last:pb-0 flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center";
+
+                let attdButtonsHTML = '';
+                DAYS.forEach(day => {
+                    const status = attendance[staff.id][day.key] || 'P';
+                    let btnStyle = "bg-slate-100 text-slate-600 border-slate-200";
+
+                    if (status === 'P') btnStyle = "bg-emerald-500 text-white border-emerald-600 font-bold";
+                    if (status === 'A') btnStyle = "bg-red-500 text-white border-red-600 font-bold";
+                    if (status === 'H') btnStyle = "bg-amber-400 text-slate-900 border-amber-500 font-bold";
+                    if (status === 'O') btnStyle = "bg-slate-200 text-slate-600 border-slate-300";
+
+                    // Optimized 38px iOS friendly tap area
+                    attdButtonsHTML += `
+                        <button onclick="toggleAttendanceStatus(${staff.id}, '${day.key}')" class="w-9 h-9 rounded-lg border text-xs flex flex-col items-center justify-center transition-all ${btnStyle}" title="${day.np} - हाजिरी बदल्नुहोस्">
+                            <span class="block text-[8px] opacity-75">${day.np.substring(0, 3)}</span>
+                            <span class="text-xs leading-none mt-0.5">${status}</span>
+                        </button>
+                    `;
+                });
+
+                wrapper.innerHTML = `
+                    <!-- Staff details -->
+                    <div class="flex items-center gap-2.5 w-full lg:w-1/4">
+                        <div class="w-9 h-9 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center text-sm font-bold shrink-0">
+                            ${staff.name.substring(0, 1)}
+                        </div>
+                        <div class="truncate">
+                            <span class="text-xs font-black text-slate-800 block truncate">${staff.name}</span>
+                            <span class="text-[10px] text-slate-400 block truncate">${staff.role}</span>
+                        </div>
+                    </div>
+
+                    <!-- Attendance Toggles -->
+                    <div class="space-y-1 w-full lg:w-auto overflow-x-auto pb-1 custom-scrollbar">
+                        <span class="block text-[9px] font-black text-slate-400 uppercase tracking-wider">साप्ताहिक हाजिरी ग्रिड (Attendance Grid)</span>
+                        <div class="flex items-center gap-1.5 min-w-[280px]">
+                            ${attdButtonsHTML}
+                        </div>
+                    </div>
+
+                    <!-- Sales Target/Achievement Inputs -->
+                    <div class="space-y-1 w-full lg:w-1/3">
+                        <div class="flex justify-between items-center text-[9px] font-black text-slate-400 uppercase tracking-wider">
+                            <span>बिक्री प्रगति (Sales Performance)</span>
+                            <span class="text-amber-600 font-bold">${salesPercent}% सम्पन्न</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <div class="relative flex-grow">
+                                <span class="absolute inset-y-0 left-0 pl-2 flex items-center text-[10px] text-slate-400 font-bold">लक्ष्य</span>
+                                <input type="number" value="${sSales.target}" onchange="updateSalesValue(${staff.id}, 'target', this.value)" class="w-full pl-9 pr-2 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold">
+                            </div>
+                            <div class="relative flex-grow">
+                                <span class="absolute inset-y-0 left-0 pl-2 flex items-center text-[10px] text-slate-400 font-bold">प्राप्त</span>
+                                <input type="number" value="${sSales.achieved}" onchange="updateSalesValue(${staff.id}, 'achieved', this.value)" class="w-full pl-9 pr-2 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold">
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(wrapper);
+            });
+        }
+
+        // Toggle attendance status
+        function toggleAttendanceStatus(staffId, dayKey) {
+            const current = attendance[staffId]?.[dayKey] || 'P';
+            let next = 'P';
+            if (current === 'P') next = 'A';
+            else if (current === 'A') next = 'H';
+            else if (current === 'H') next = 'O';
+            else if (current === 'O') next = 'P';
+
+            if (!attendance[staffId]) attendance[staffId] = {};
+            attendance[staffId][dayKey] = next;
+
+            saveToLocalStorage();
+            renderAttendanceAndSales();
+            renderWeeklyReport();
+            updateKPIs();
+            showToast("हाजिरी अपडेट गरियो।");
+        }
+
+        // Update sales input values
+        function updateSalesValue(staffId, field, value) {
+            const num = parseInt(value, 10) || 0;
+            if (!salesPerformance[staffId]) {
+                salesPerformance[staffId] = { target: 10000, achieved: 0 };
+            }
+            salesPerformance[staffId][field] = num;
+
+            saveToLocalStorage();
+            renderAttendanceAndSales();
+            renderWeeklyReport();
+            updateKPIs();
+            updateChart();
+            showToast("बिक्री तथ्याङ्क सुरक्षित भयो।");
+        }
+
+        /* ==========================================================================
+           CONFIRMATION AND INTERACTIVE TOASTS
+           ========================================================================== */
+        let confirmPromiseResolve = null;
+        function showConfirmModal(title, description) {
+            document.getElementById('confirm-modal-title').innerText = title;
+            document.getElementById('confirm-modal-desc').innerText = description;
+            
+            const modal = document.getElementById('confirm-modal');
+            const content = document.getElementById('confirm-modal-content');
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+            }, 10);
+
+            return new Promise((resolve) => {
+                confirmPromiseResolve = resolve;
+            });
+        }
+
+        function closeConfirmModal(result) {
+            const modal = document.getElementById('confirm-modal');
+            const content = document.getElementById('confirm-modal-content');
+
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+
+            if (confirmPromiseResolve) {
+                confirmPromiseResolve(result);
+                confirmPromiseResolve = null;
+            }
+        }
+
+        document.getElementById('confirm-modal-btn-confirm').onclick = () => closeConfirmModal(true);
+        document.getElementById('confirm-modal-btn-cancel').onclick = () => closeConfirmModal(false);
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `flex items-center gap-2.5 p-4 bg-white border-l-4 rounded-xl shadow-lg pointer-events-auto transition-all duration-300 max-w-sm ${
+                type === 'success' ? 'border-emerald-500 text-slate-800' : 'border-red-500 text-slate-800'
+            }`;
+            
+            toast.innerHTML = `
+                <div class="${type === 'success' ? 'text-emerald-500' : 'text-red-500'}">
+                    <i class="fa-solid ${type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'} text-lg"></i>
+                </div>
+                <div class="text-xs font-semibold">${message}</div>
+            `;
+            
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        /* ==========================================================================
+           DAYS AND STAFF LIST SELECTORS
+           ========================================================================== */
+        function renderDaysSelector() {
+            const container = document.getElementById('days-container');
+            container.innerHTML = '';
+
+            DAYS.forEach(day => {
+                const isActive = day.key === activeDay;
+                const totalAndDone = getDayProgressStats(day.key);
+                const percent = totalAndDone.total > 0 ? Math.round((totalAndDone.done / totalAndDone.total) * 100) : 0;
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `flex flex-row lg:flex-row items-center justify-between p-3 rounded-xl border text-left transition-all shrink-0 min-w-[110px] lg:min-w-0 ${
+                    isActive 
+                        ? 'bg-indigo-600 border-indigo-600 text-white shadow-md font-bold btn-theme' 
+                        : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700'
+                }`;
+                btn.onclick = () => {
+                    activeDay = day.key;
+                    renderDaysSelector();
+                    updateWorkspace();
+                };
+
+                btn.innerHTML = `
+                    <div class="space-y-0.5">
+                        <span class="block text-[10px] font-bold ${isActive ? 'text-indigo-100' : 'text-slate-400'}">${day.en.substring(0, 3)}</span>
+                        <span class="text-xs font-bold leading-none">${day.np}</span>
+                    </div>
+                    <div class="text-right ml-2">
+                        <span class="inline-block text-[9px] px-1.5 py-0.5 rounded-full ${
+                            isActive 
+                                ? 'bg-white/20 text-white' 
+                                : percent === 100 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200/70 text-slate-600'
+                        }">
+                            ${percent}%
+                        </span>
+                    </div>
+                `;
+                container.appendChild(btn);
+            });
+        }
+
+        function renderStaffSelector() {
+            const container = document.getElementById('staff-container');
+            container.innerHTML = '';
+
+            if (staffs.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 text-center py-4 font-semibold">कुनै स्टाफ थपिएको छैन।</p>`;
+                return;
+            }
+
+            staffs.forEach(staff => {
+                const isActive = staff.id === activeStaff;
+                const weeklyStats = getStaffWeeklyStats(staff.id);
+                const percent = weeklyStats.total > 0 ? Math.round((weeklyStats.done / weeklyStats.total) * 100) : 0;
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `p-3 rounded-xl border text-left flex items-center justify-between transition-all shrink-0 min-w-[160px] lg:w-full lg:min-w-0 ${
+                    isActive 
+                        ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 border-indigo-700 text-white shadow-md font-bold' 
+                        : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700'
+                }`;
+                if (isActive) {
+                    btn.style.backgroundImage = `linear-gradient(to right, ${businessTheme === 'indigo' ? '#4f46e5' : businessTheme === 'emerald' ? '#059669' : businessTheme === 'violet' ? '#7c3aed' : businessTheme === 'rose' ? '#e11d48' : '#d97706'}, #1e1b4b)`;
+                }
+                btn.onclick = () => {
+                    activeStaff = staff.id;
+                    renderStaffSelector();
+                    updateWorkspace();
+                };
+
+                btn.innerHTML = `
+                    <div class="flex items-center gap-2 max-w-[65%]">
+                        <div class="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-xs ${
+                            isActive ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-700 text-theme'
+                        }">
+                            <i class="fa-solid fa-user text-[10px]"></i>
+                        </div>
+                        <div class="truncate">
+                            <span class="text-xs font-black block truncate leading-none">${staff.name.split(' ')[0]}</span>
+                            <span class="text-[9px] block opacity-85 truncate mt-0.5 ${isActive ? 'text-indigo-100' : 'text-slate-400'}">${staff.role}</span>
+                        </div>
+                    </div>
+                    <span class="text-[10px] font-black whitespace-nowrap ml-2 ${isActive ? 'text-yellow-300' : 'text-indigo-600 text-theme'}">${percent}%</span>
+                `;
+                container.appendChild(btn);
+            });
+        }
+
+        // Helper stats compute
+        function getDayProgressStats(dayKey) {
+            let total = 0;
+            let done = 0;
+            staffs.forEach(s => {
+                const staffTasks = tasks[s.id]?.[dayKey] || [];
+                total += staffTasks.length;
+                done += staffTasks.filter(t => t.done).length;
+            });
+            return { total, done };
+        }
+
+        function getStaffWeeklyStats(staffId) {
+            let total = 0;
+            let done = 0;
+            DAYS.forEach(day => {
+                const staffDayTasks = tasks[staffId]?.[day.key] || [];
+                total += staffDayTasks.length;
+                done += staffDayTasks.filter(t => t.done).length;
+            });
+            return { total, done };
+        }
+
+        // Checklist tasks workspace renderer
+        function updateWorkspace() {
+            const currentDay = DAYS.find(d => d.key === activeDay);
+            const currentStaff = staffs.find(s => s.id === activeStaff);
+
+            const container = document.getElementById('checklist-tasks');
+            const emptyState = document.getElementById('empty-state');
+            
+            if (!currentStaff) {
+                document.getElementById('current-day-badge').innerText = currentDay.np;
+                document.getElementById('current-staff-name').innerText = "(कुनै स्टाफ छैन)";
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+                document.getElementById('current-selection-progress').style.width = `0%`;
+                document.getElementById('current-selection-percent').innerText = `0%`;
+                return;
+            }
+
+            document.getElementById('current-day-badge').innerText = currentDay.np;
+            document.getElementById('current-staff-name').innerText = currentStaff.name;
+
+            const staffDayTasks = tasks[activeStaff]?.[activeDay] || [];
+            container.innerHTML = '';
+
+            if (staffDayTasks.length === 0) {
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+            } else {
+                emptyState.classList.add('hidden');
+                emptyState.classList.remove('flex');
+
+                staffDayTasks.forEach((task) => {
+                    const div = document.createElement('div');
+                    div.className = `group flex items-center justify-between p-3.5 rounded-xl border transition-all ${
+                        task.done 
+                            ? 'bg-emerald-50/40 border-emerald-100 text-slate-500' 
+                            : 'bg-white border-slate-200 text-slate-800 shadow-sm hover:border-indigo-300'
+                    }`;
+
+                    // Circular and large iOS friendly checkbox areas
+                    div.innerHTML = `
+                        <!-- View State -->
+                        <div id="task-view-${task.id}" class="flex items-center justify-between w-full gap-2">
+                            <div class="flex items-center gap-3.5 flex-grow cursor-pointer py-1" onclick="toggleTaskStatus('${task.id}')">
+                                <span class="text-2xl flex items-center justify-center shrink-0">
+                                    <i class="${task.done ? 'fa-solid fa-circle-check text-emerald-600' : 'fa-regular fa-circle text-slate-300 group-hover:text-indigo-500'} transition-colors"></i>
+                                </span>
+                                <span class="text-xs font-semibold select-none ${task.done ? 'line-through text-slate-400' : 'text-slate-800'}">
+                                    ${task.title}
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-1 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button onclick="startEditTask('${task.id}', \`${task.title.replace(/"/g, '&quot;')}\`)" class="text-slate-400 hover:text-indigo-600 p-2 rounded-lg hover:bg-indigo-50" title="काम सम्पादन गर्नुहोस्">
+                                    <i class="fa-solid fa-pen text-xs"></i>
+                                </button>
+                                <button onclick="deleteTask('${task.id}')" class="text-slate-400 hover:text-red-500 p-2 rounded-lg hover:bg-red-50" title="काम हटाउनुहोस्">
+                                    <i class="fa-regular fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Edit State -->
+                        <div id="task-edit-${task.id}" class="hidden w-full items-center gap-2">
+                            <input type="text" id="input-edit-${task.id}" class="flex-grow p-2.5 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 font-semibold" value="${task.title.replace(/"/g, '&quot;')}">
+                            <button onclick="saveEditTask('${task.id}')" class="px-3.5 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-xs font-bold transition-all">
+                                <i class="fa-solid fa-check"></i>
+                            </button>
+                            <button onclick="cancelEditTask('${task.id}')" class="px-3.5 py-2.5 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 text-xs font-bold transition-all">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+            }
+
+            const total = staffDayTasks.length;
+            const done = staffDayTasks.filter(t => t.done).length;
+            const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+            
+            document.getElementById('current-selection-progress').style.width = `${percent}%`;
+            document.getElementById('current-selection-percent').innerText = `${percent}%`;
+        }
+
+        function startEditTask(taskId, currentTitle) {
+            document.getElementById(`task-view-${taskId}`).classList.remove('flex');
+            document.getElementById(`task-view-${taskId}`).classList.add('hidden');
+            
+            const editForm = document.getElementById(`task-edit-${taskId}`);
+            editForm.classList.remove('hidden');
+            editForm.classList.add('flex');
+            
+            const input = document.getElementById(`input-edit-${taskId}`);
+            input.focus();
+            input.select();
+        }
+
+        function cancelEditTask(taskId) {
+            document.getElementById(`task-edit-${taskId}`).classList.remove('flex');
+            document.getElementById(`task-edit-${taskId}`).classList.add('hidden');
+            
+            const viewForm = document.getElementById(`task-view-${taskId}`);
+            viewForm.classList.remove('hidden');
+            viewForm.classList.add('flex');
+        }
+
+        function saveEditTask(taskId) {
+            const input = document.getElementById(`input-edit-${taskId}`);
+            const newTitle = input.value.trim();
+
+            if (!newTitle) {
+                showToast("कृपया कामको नाम खाली नछोड्नुहोस् !", "error");
+                return;
+            }
+
+            let updated = false;
+            for (let sId in tasks) {
+                for (let dKey in tasks[sId]) {
+                    const task = tasks[sId][dKey].find(t => t.id === taskId);
+                    if (task) {
+                        task.title = newTitle;
+                        updated = true;
+                        break;
+                    }
+                }
+                if (updated) break;
+            }
+
+            if (updated) {
+                saveToLocalStorage();
+                updateWorkspace();
+                renderWeeklyReport();
+                showToast("कार्य सम्पादन गरियो !");
+            }
+        }
+
+        function toggleTaskStatus(taskId) {
+            let found = false;
+            for (let sId in tasks) {
+                for (let dKey in tasks[sId]) {
+                    const task = tasks[sId][dKey].find(t => t.id === taskId);
+                    if (task) {
+                        task.done = !task.done;
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) break;
+            }
+
+            if (found) {
+                saveToLocalStorage();
+                updateWorkspace();
+                updateKPIs();
+                updateChart();
+                renderDaysSelector();
+                renderStaffSelector();
+                renderWeeklyReport();
+                showToast("कार्यको स्थिति अपडेट गरियो !");
+            }
+        }
+
+        async function deleteTask(taskId) {
+            const confirmed = await showConfirmModal("काम हटाउने?", "के तपाईं निश्चित रूपमा यो कार्य सूचीबाट हटाउन चाहनुहुन्छ?");
+            if (!confirmed) return;
+
+            let found = false;
+            for (let sId in tasks) {
+                for (let dKey in tasks[sId]) {
+                    const index = tasks[sId][dKey].findIndex(t => t.id === taskId);
+                    if (index !== -1) {
+                        tasks[sId][dKey].splice(index, 1);
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) break;
+            }
+
+            if (found) {
+                saveToLocalStorage();
+                updateWorkspace();
+                updateKPIs();
+                updateChart();
+                renderDaysSelector();
+                renderStaffSelector();
+                renderWeeklyReport();
+                showToast("कार्य हटाइयो।", "error");
+            }
+        }
+
+        document.getElementById('add-task-form').onsubmit = function (e) {
+            e.preventDefault();
+            
+            if (activeStaff === null) {
+                showToast("कृपया पहिले स्टाफ थप्नुहोस् वा रोज्नुहोस् !", "error");
+                return;
+            }
+
+            const input = document.getElementById('new-task-title');
+            const title = input.value.trim();
+
+            if (!title) return;
+
+            const newId = 'task_' + Date.now();
+
+            if (!tasks[activeStaff]) {
+                tasks[activeStaff] = {};
+            }
+            if (!tasks[activeStaff][activeDay]) {
+                tasks[activeStaff][activeDay] = [];
+            }
+
+            tasks[activeStaff][activeDay].push({
+                id: newId,
+                title: title,
+                done: false
+            });
+
+            saveToLocalStorage();
+            input.value = '';
+            
+            updateWorkspace();
+            updateKPIs();
+            updateChart();
+            renderDaysSelector();
+            renderStaffSelector();
+            renderWeeklyReport();
+            showToast("नयाँ कार्य सफलतापूर्वक थपियो !");
+        };
+
+        /* ==========================================================================
+           METRICS COMPILING & REPORT GENERATION
+           ========================================================================== */
+        function getWeeklyOverallStatus() {
+            let total = 0;
+            let done = 0;
+            for (let sId in tasks) {
+                const staffId = parseInt(sId, 10);
+                if (!staffs.some(s => s.id === staffId)) continue;
+
+                for (let dKey in tasks[sId]) {
+                    total += tasks[sId][dKey].length;
+                    done += tasks[sId][dKey].filter(t => t.done).length;
+                }
+            }
+            return { total, done };
+        }
+
+        function getTodayStatus() {
+            const now = new Date();
+            const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const nepalTimezoneOffset = 5.75 * 60 * 60 * 1000;
+            const nepalTime = new Date(utcTime + nepalTimezoneOffset);
+
+            const daysMapping = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+            const todayKey = daysMapping[nepalTime.getDay()];
+
+            let total = 0;
+            let done = 0;
+            staffs.forEach(s => {
+                const staffTasks = tasks[s.id]?.[todayKey] || [];
+                total += staffTasks.length;
+                done += staffTasks.filter(t => t.done).length;
+            });
+            return { total, done, todayKey };
+        }
+
+        function getWeeklyTotalSales() {
+            let target = 0;
+            let achieved = 0;
+            staffs.forEach(s => {
+                const perf = salesPerformance[s.id] || { target: 0, achieved: 0 };
+                target += perf.target;
+                achieved += perf.achieved;
+            });
+            return { target, achieved };
+        }
+
+        function calculateStarPerformer() {
+            let bestStaff = null;
+            let maxPoints = -1;
+
+            staffs.forEach(staff => {
+                const stats = getStaffWeeklyStats(staff.id);
+                const textPercent = stats.total > 0 ? (stats.done / stats.total) * 100 : 0;
+                
+                const sSales = salesPerformance[staff.id] || { target: 10000, achieved: 0 };
+                const salesPercent = sSales.target > 0 ? (sSales.achieved / sSales.target) * 100 : 0;
+
+                const overallPoints = (textPercent * 0.5) + (salesPercent * 0.5);
+                
+                if (overallPoints > maxPoints && overallPoints > 0) {
+                    maxPoints = overallPoints;
+                    bestStaff = { ...staff, percent: Math.round(overallPoints) };
+                }
+            });
+
+            return bestStaff;
+        }
+
+        function updateKPIs() {
+            const overall = getWeeklyOverallStatus();
+            const overallPercent = overall.total > 0 ? Math.round((overall.done / overall.total) * 100) : 0;
+            document.getElementById('stat-total-percent').innerText = `${overallPercent}%`;
+            document.getElementById('stat-total-bar').style.width = `${overallPercent}%`;
+            document.getElementById('header-progress').innerText = `${overallPercent}% Done`;
+
+            const todayStats = getTodayStatus();
+            document.getElementById('stat-today-done').innerText = `${todayStats.done}/${todayStats.total}`;
+            const remaining = todayStats.total - todayStats.done;
+            const todayTextElement = document.getElementById('stat-today-text');
+            if (todayStats.total === 0) {
+                todayTextElement.innerText = "आजको कुनै कार्य तय गरिएको छैन।";
+            } else if (remaining === 0) {
+                todayTextElement.innerText = "बधाई छ! आजका सबै कामहरू सम्पन्न भए 🎉";
+                todayTextElement.className = "text-xs text-emerald-600 font-semibold";
+            } else {
+                todayTextElement.innerText = `अझै ${remaining} वटा कामहरू गर्न बाँकी छ।`;
+                todayTextElement.className = "text-xs text-slate-500";
+            }
+
+            const sales = getWeeklyTotalSales();
+            const salesRate = sales.target > 0 ? Math.round((sales.achieved / sales.target) * 100) : 0;
+            document.getElementById('stat-sales-rate').innerText = `${salesRate}%`;
+            document.getElementById('stat-sales-values').innerText = `रु ${toNepaliNumerals(sales.achieved)} / ${toNepaliNumerals(sales.target)}`;
+            document.getElementById('stat-sales-bar').style.width = `${Math.min(salesRate, 100)}%`;
+
+            const star = calculateStarPerformer();
+            if (star) {
+                document.getElementById('stat-star-name').innerText = star.name.split(' ')[0];
+                document.getElementById('stat-star-desc').innerText = `प्रदर्शन अंक: ${toNepaliNumerals(star.percent)}%`;
+            } else {
+                document.getElementById('stat-star-name').innerText = "कोही छैन";
+                document.getElementById('stat-star-desc').innerText = "सक्रियता बढाउनुहोस्";
+            }
+        }
+
+        function renderWeeklyReport() {
+            const container = document.getElementById('weekly-report-rows');
+            container.innerHTML = '';
+
+            if (staffs.length === 0) {
+                container.innerHTML = `
+                    <tr>
+                        <td colspan="11" class="p-8 text-center text-slate-400 text-xs font-semibold">
+                            विवरण खाली छ। कृपया पहिले थप स्टाफ थप्नुहोस्।
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            staffs.forEach(staff => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/50 border-b border-slate-100 transition-all";
+
+                let rowHTML = `
+                    <td class="p-3.5 font-bold text-slate-700">
+                        <div>${staff.name}</div>
+                        <div class="text-[10px] text-slate-400 font-normal">${staff.role}</div>
+                    </td>
+                `;
+
+                let presentDays = 0;
+
+                DAYS.forEach(day => {
+                    const status = attendance[staff.id]?.[day.key] || 'P';
+                    let bgClass = "bg-slate-100 text-slate-600 border-slate-200";
+
+                    if (status === 'P') {
+                        presentDays++;
+                        bgClass = "bg-emerald-50 text-emerald-700 font-bold border-emerald-100";
+                    } else if (status === 'A') {
+                        bgClass = "bg-red-50 text-red-700 font-bold border-red-100";
+                    } else if (status === 'H') {
+                        presentDays += 0.5;
+                        bgClass = "bg-amber-50 text-amber-700 font-bold border-amber-100";
+                    } else {
+                        bgClass = "bg-slate-100 text-slate-500 border-slate-200";
+                    }
+
+                    rowHTML += `
+                        <td class="p-3 text-center">
+                            <span class="inline-block text-xs px-2 py-1 rounded-md border ${bgClass} w-9 text-center">
+                                ${status}
+                            </span>
+                        </td>
+                    `;
+                });
+
+                rowHTML += `
+                    <td class="p-3 text-center bg-indigo-50/20 font-black text-indigo-700 text-theme">
+                        ${toNepaliNumerals(presentDays)} दिन
+                    </td>
+                `;
+
+                const sSales = salesPerformance[staff.id] || { target: 0, achieved: 0 };
+                const salesPercent = sSales.target > 0 ? Math.round((sSales.achieved / sSales.target) * 100) : 0;
+                rowHTML += `
+                    <td class="p-3 text-center bg-amber-50/30">
+                        <div class="text-xs font-bold text-slate-700">रु ${toNepaliNumerals(sSales.achieved)}</div>
+                        <div class="text-[10px] text-slate-400">लक्ष्य: रु ${toNepaliNumerals(sSales.target)} (${toNepaliNumerals(salesPercent)}%)</div>
+                    </td>
+                `;
+
+                const stats = getStaffWeeklyStats(staff.id);
+                const overallPercent = stats.total > 0 ? Math.round((stats.done / stats.total) * 100) : 0;
+                rowHTML += `
+                    <td class="p-3 text-center bg-emerald-50/20 font-black text-emerald-700">
+                        ${toNepaliNumerals(overallPercent)}%
+                        <div class="text-[9px] text-slate-400 font-normal">(${toNepaliNumerals(stats.done)}/${toNepaliNumerals(stats.total)})</div>
+                    </td>
+                `;
+
+                tr.innerHTML = rowHTML;
+                container.appendChild(tr);
+            });
+        }
+
+        /* ==========================================================================
+           CHART DISPLAY SYSTEMS
+           ========================================================================== */
+        function initChart() {
+            const ctx = document.getElementById('progressChart').getContext('2d');
+            const labels = staffs.map(s => s.name.split(' ')[0]);
+            const currentData = getChartDataset();
+
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: activeChartDataType === 'tasks' ? 'साप्ताहिक कार्य सम्पन्न दर (%)' : 'सापचारिक बिक्री लक्ष्य पूरा (%)',
+                        data: currentData,
+                        backgroundColor: [
+                            'rgba(99, 102, 241, 0.85)',
+                            'rgba(16, 185, 129, 0.85)',
+                            'rgba(168, 85, 247, 0.85)',
+                            'rgba(245, 158, 11, 0.85)',
+                            'rgba(239, 68, 68, 0.85)',
+                            'rgba(6, 182, 212, 0.85)'
+                        ],
+                        borderColor: [
+                            'rgb(79, 70, 229)',
+                            'rgb(5, 150, 105)',
+                            'rgb(147, 51, 234)',
+                            'rgb(217, 119, 6)',
+                            'rgb(220, 38, 38)',
+                            'rgb(8, 145, 178)'
+                        ],
+                        borderWidth: 1.5,
+                        borderRadius: 8,
+                        maxBarThickness: 50
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) { return value + "%"; }
+                            },
+                            grid: {
+                                color: '#f1f5f9'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        function getChartDataset() {
+            if (activeChartDataType === 'tasks') {
+                return staffs.map(s => {
+                    const stats = getStaffWeeklyStats(s.id);
+                    return stats.total > 0 ? Math.round((stats.done / stats.total) * 100) : 0;
+                });
+            } else {
+                return staffs.map(s => {
+                    const perf = salesPerformance[s.id] || { target: 10000, achieved: 0 };
+                    return perf.target > 0 ? Math.round((perf.achieved / perf.target) * 100) : 0;
+                });
+            }
+        }
+
+        function toggleChartDataType(type) {
+            activeChartDataType = type;
+            const btnTasks = document.getElementById('chart-btn-tasks');
+            const btnSales = document.getElementById('chart-btn-sales');
+
+            if (type === 'tasks') {
+                btnTasks.className = "px-3 py-1.5 text-xs font-bold rounded-lg transition-all bg-white shadow-sm text-slate-800";
+                btnSales.className = "px-3 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-800";
+            } else {
+                btnSales.className = "px-3 py-1.5 text-xs font-bold rounded-lg transition-all bg-white shadow-sm text-slate-800";
+                btnTasks.className = "px-3 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-800";
+            }
+
+            updateChart();
+        }
+
+        function updateChart() {
+            if (!chartInstance) return;
+
+            const labels = staffs.map(s => s.name.split(' ')[0]);
+            const currentData = getChartDataset();
+
+            chartInstance.data.labels = labels;
+            chartInstance.data.datasets[0].data = currentData;
+            chartInstance.data.datasets[0].label = activeChartDataType === 'tasks' ? 'साप्ताहिक कार्य सम्पन्न दर (%)' : 'साप्ताहिक बिक्री पूरा (%)';
+            chartInstance.update();
+        }
+
+        /* ==========================================================================
+           GEMINI AI INTEGRATION SYSTEMS
+           ========================================================================== */
+        async function generateAITasks() {
+            const sector = document.getElementById('ai-business-sector').value.trim();
+            const role = document.getElementById('ai-staff-role').value;
+            const targetDayObj = DAYS.find(d => d.key === activeDay);
+
+            if (activeStaff === null) {
+                showToast("कृपया पहिले स्टाफ थप्नुहोस् र रोज्नुहोस् !", "error");
+                return;
+            }
+
+            if (!sector) {
+                showToast("कृपया पहिले व्यवसायको प्रकार (Business Sector) प्रविष्टि गर्नुहोस् !", "error");
+                return;
+            }
+
+            const btn = document.getElementById('btn-ai-tasks');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> एआईले कामहरू सोच्दैछ...`;
+            btn.disabled = true;
+
+            const systemPrompt = "तपाईं एक अनुभवी नेपाली व्यवसाय प्रबन्धक हुनुहुन्छ। नेपाली भाषामै स्पष्ट, अर्थपूर्ण र अत्यन्तै उपयोगी दैनिक कामहरू मात्र सिर्जना गर्नुहोस्।";
+            const userPrompt = `मेरो व्यवसाय "${sector}" का लागि कामहरू आवश्यक छ। 
+स्टाफ सदस्यको जिम्मेवारी/भूमिका "${role}" हो र हप्ताको बार "${targetDayObj.np} (${targetDayObj.en})" हो। 
+यस दिनका लागि उपयुक्त हुने ४ वटा व्यावहारिक दैनिक कार्यहरू नेपाली भाषामा तयार पार्नुहोस्।`;
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userPrompt }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "ARRAY",
+                        items: {
+                            type: "OBJECT",
+                            properties: {
+                                title: { type: "STRING", description: "दैनिक कार्यको स्पष्ट नाम नेपालीमा (अधिकतम ६० अक्षर)" }
+                            },
+                            required: ["title"]
+                        }
+                    }
+                }
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error("API call failed");
+
+                const result = await response.json();
+                const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                const parsedTasks = JSON.parse(jsonText);
+
+                if (Array.isArray(parsedTasks) && parsedTasks.length > 0) {
+                    generatedAITasksDraft = parsedTasks;
+                    renderAITasksPreview();
+                    showToast("एआईले ४ वटा कार्यहरू सफलतापूर्वक ड्राफ्ट गर्‍यो !");
+                } else {
+                    throw new Error("Invalid response format");
+                }
+
+            } catch (error) {
+                console.error(error);
+                showToast("सिर्जना गर्दा समस्या आयो! फेरि प्रयास गर्नुहोस्।", "error");
+            } finally {
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            }
+        }
+
+        function renderAITasksPreview() {
+            const previewBox = document.getElementById('ai-tasks-preview-box');
+            const itemsList = document.getElementById('ai-generated-items-list');
+            itemsList.innerHTML = '';
+
+            generatedAITasksDraft.forEach((task) => {
+                const item = document.createElement('div');
+                item.className = "flex items-center gap-2.5 p-3 bg-white/10 rounded-xl border border-white/10 hover:bg-white/15 transition-all text-white";
+                item.innerHTML = `
+                    <div class="p-1 bg-yellow-400 text-slate-950 rounded-full flex items-center justify-center text-[10px]">
+                        <i class="fa-solid fa-check"></i>
+                    </div>
+                    <span>${task.title}</span>
+                `;
+                itemsList.appendChild(item);
+            });
+
+            previewBox.classList.remove('hidden');
+            previewBox.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function applyAITasks() {
+            if (generatedAITasksDraft.length === 0 || activeStaff === null) return;
+
+            if (!tasks[activeStaff]) {
+                tasks[activeStaff] = {};
+            }
+            if (!tasks[activeStaff][activeDay]) {
+                tasks[activeStaff][activeDay] = [];
+            }
+
+            generatedAITasksDraft.forEach(draft => {
+                const newId = 'task_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+                tasks[activeStaff][activeDay].push({
+                    id: newId,
+                    title: draft.title,
+                    done: false
+                });
+            });
+
+            saveToLocalStorage();
+            closeAITaskPreview();
+            
+            updateWorkspace();
+            updateKPIs();
+            updateChart();
+            renderDaysSelector();
+            renderStaffSelector();
+            renderWeeklyReport();
+            showToast("कार्यहरू आजको चेकलिस्टमा सफलतापूर्वक थपिए !");
+        }
+
+        function closeAITaskPreview() {
+            document.getElementById('ai-tasks-preview-box').classList.add('hidden');
+            generatedAITasksDraft = [];
+        }
+
+        // AI Performance & Attendance review
+        async function generateAICoachFeedback() {
+            if (staffs.length === 0) {
+                showToast("कृपया पहिले कम्तिमा एकजना स्टाफ थप्नुहोस् !", "error");
+                return;
+            }
+
+            const btn = document.getElementById('btn-ai-coach');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> ड्यासबोर्ड विश्लेषण गरिँदैछ...`;
+            btn.disabled = true;
+
+            let reportStrings = staffs.map((staff, index) => {
+                const stats = getStaffWeeklyStats(staff.id);
+                const taskPercent = stats.total > 0 ? Math.round(stats.done/stats.total*100) : 0;
+                
+                const sSales = salesPerformance[staff.id] || { target: 0, achieved: 0 };
+                const salesPercent = sSales.target > 0 ? Math.round((sSales.achieved/sSales.target)*100) : 0;
+
+                let presentCount = 0;
+                DAYS.forEach(d => {
+                    const status = attendance[staff.id]?.[d.key] || 'P';
+                    if (status === 'P') presentCount++;
+                    if (status === 'H') presentCount += 0.5;
+                });
+
+                return `${index + 1}. ${staff.name} (${staff.role}): कार्य सम्पन्न: ${taskPercent}%, हाजिरी: ${presentCount} दिन उपस्थित, बिक्री उपलब्धि: ${salesPercent}% (रु ${sSales.achieved}/${sSales.target})`;
+            }).join('\n');
+
+            const prompt = `हाम्रो व्यवसाय "${businessName}" को स्टाफ कार्यसम्पादन र हाजिरी प्रतिवेदन निम्नानुसार छ:
+${reportStrings}
+
+स्टाफहरूको हाजिरी, बिक्री प्रदर्शन र दैनिक कामको सम्पन्नताको आधारमा एउटा छोटो मिठो र हौसला दिने साप्ताहिक प्रतिक्रिया (२ वाक्य वा १८० अक्षर सम्म) शुद्ध नेपाली भाषामा लेख्नुहोस् ताकि यो सुनेर स्टाफहरू उत्साहित होउन्। प्रतिक्रिया एन्त्यत छोटो र प्रेरक हुनुपर्छ।`;
+
+            const textApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+            try {
+                const textResponse = await fetch(textApiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }],
+                        systemInstruction: { parts: [{ text: "तपाईं एक प्रेरक व्यवसाय कोच हुनुहुन्छ। नेपालीमा प्रतिक्रिया धेरै छोटो (अधिकतम २ वाक्य) र मीठो हुनुपर्छ।" }] }
+                    })
+                });
+
+                if (!textResponse.ok) throw new Error("Text response failed");
+
+                const textResult = await textResponse.json();
+                const feedbackText = textResult.candidates?.[0]?.content?.parts?.[0]?.text || "सबै स्टाफको प्रदर्शन राम्रो छ !";
+                
+                document.getElementById('ai-coach-text').innerText = feedbackText;
+                showToast("एआईले टिमको विस्तृत विश्लेषण तयार गर्‍यो !");
+
+                // Call TTS model for audio feedback
+                showToast("एआई आवाज उत्पन्न हुँदैछ, कृपया एकछिन पर्खनुहोस्...");
+                const ttsApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+
+                const ttsPayload = {
+                    contents: [{ parts: [{ text: `नेपालीमा भन्नुहोस्: ${feedbackText}` }] }],
+                    generationConfig: {
+                        responseModalities: ["AUDIO"],
+                        speechConfig: {
+                            voiceConfig: {
+                                prebuiltVoiceConfig: { voiceName: "Sadachbia" } 
+                            }
+                        }
+                    }
+                };
+
+                const ttsResponse = await fetch(ttsApiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(ttsPayload)
+                });
+
+                if (!ttsResponse.ok) throw new Error("TTS conversion failed");
+
+                const ttsResult = await ttsResponse.json();
+                const part = ttsResult?.candidates?.[0]?.content?.parts?.[0];
+                const base64AudioData = part?.inlineData?.data;
+                const mimeType = part?.inlineData?.mimeType;
+
+                if (base64AudioData && mimeType && mimeType.startsWith("audio/")) {
+                    let sampleRate = 24000; 
+                    const rateMatch = mimeType.match(/rate=(\d+)/);
+                    if (rateMatch) {
+                        sampleRate = parseInt(rateMatch[1], 10);
+                    }
+
+                    const rawBuffer = base64ToArrayBuffer(base64AudioData);
+                    const pcm16Data = new Int16Array(rawBuffer);
+                    const wavBlob = pcmToWav(pcm16Data, sampleRate);
+                    
+                    if (aiAudioFeedbackBlobUrl) {
+                        URL.revokeObjectURL(aiAudioFeedbackBlobUrl);
+                    }
+                    aiAudioFeedbackBlobUrl = URL.createObjectURL(wavBlob);
+
+                    document.getElementById('ai-tts-box').classList.remove('hidden');
+                }
+
+            } catch (err) {
+                console.error(err);
+                showToast("समीक्षा तयार गर्न मिलेन! फेरि प्रयास गर्नुहोस्।", "error");
+            } finally {
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            }
+        }
+
+        function playAIFeedbackAudio() {
+            if (!aiAudioFeedbackBlobUrl) return;
+            const audio = new Audio(aiAudioFeedbackBlobUrl);
+            audio.play().catch(e => {
+                console.error("Audio playback interrupted", e);
+                showToast("आवाज प्ले गर्न मिलेन।", "error");
+            });
+        }
+
+        function pcmToWav(pcm16Array, sampleRate) {
+            const buffer = new ArrayBuffer(44 + pcm16Array.length * 2);
+            const view = new DataView(buffer);
+
+            writeString(view, 0, 'RIFF');
+            view.setUint32(4, 36 + pcm16Array.length * 2, true);
+            writeString(view, 8, 'WAVE');
+            writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true);
+            view.setUint16(22, 1, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * 2, true);
+            view.setUint16(32, 2, true);
+            view.setUint16(34, 16, true);
+            writeString(view, 36, 'data');
+            view.setUint32(40, pcm16Array.length * 2, true);
+
+            let offset = 44;
+            for (let i = 0; i < pcm16Array.length; i++, offset += 2) {
+                view.setInt16(offset, pcm16Array[i], true);
+            }
+
+            return new Blob([view], { type: 'audio/wav' });
+        }
+
+        // Base64 helper
+        function writeString(view, offset, string) {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        }
+
+        function base64ToArrayBuffer(base64) {
+            const binaryString = atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+
+        /* ==========================================================================
+           FULLY DYNAMIC STAFF MANAGEMENT WORKFLOWS
+           ========================================================================== */
+        function openStaffSettingsModal() {
+            const modal = document.getElementById('staff-modal');
+            const content = document.getElementById('staff-modal-content');
+            
+            renderModalStaffList();
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeStaffSettingsModal() {
+            const modal = document.getElementById('staff-modal');
+            const content = document.getElementById('staff-modal-content');
+            
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+
+            renderStaffSelector();
+            updateWorkspace();
+            renderAttendanceAndSales();
+            renderWeeklyReport();
+            updateKPIs();
+            updateChart();
+        }
+
+        function renderModalStaffList() {
+            const container = document.getElementById('modal-staff-list');
+            container.innerHTML = '';
+
+            if (staffs.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 text-center py-4 italic">कुनै पनि स्टाफ उपलब्ध छैन। कृपया नयाँ स्टाफ थप्नुहोस्।</p>`;
+                return;
+            }
+
+            staffs.forEach(staff => {
+                const div = document.createElement('div');
+                div.className = "flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl gap-2";
+                
+                div.innerHTML = `
+                    <div class="flex-grow grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
+                        <div>
+                            <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wide">स्टाफको नाम</span>
+                            <input type="text" id="modal-edit-name-${staff.id}" value="${staff.name.replace(/"/g, '&quot;')}" onchange="updateStaffMemberData(${staff.id})" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wide">कामको भूमिका / विभाग</span>
+                            <input type="text" id="modal-edit-role-${staff.id}" value="${staff.role.replace(/"/g, '&quot;')}" onchange="updateStaffMemberData(${staff.id})" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1 self-end sm:self-center">
+                        <button onclick="removeStaffMember(${staff.id})" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-all" title="यो स्टाफ हटाउनुहोस्">
+                            <i class="fa-regular fa-trash-can text-sm"></i>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function addNewStaffMember() {
+            const nameInput = document.getElementById('add-staff-name');
+            const roleInput = document.getElementById('add-staff-role');
+            
+            const name = nameInput.value.trim();
+            const role = roleInput.value.trim() || 'General Duty';
+
+            if (!name) {
+                showToast("कृपया स्टाफको नाम प्रविष्टि गर्नुहोस् !", "error");
+                return;
+            }
+
+            const newId = Date.now();
+            
+            staffs.push({
+                id: newId,
+                name: name,
+                role: role
+            });
+
+            tasks[newId] = { sun: [], mon: [], tue: [], wed: [], thu: [], fri: [], sat: [] };
+            attendance[newId] = { sun: 'P', mon: 'P', tue: 'P', wed: 'P', thu: 'P', fri: 'P', sat: 'O' };
+            salesPerformance[newId] = { target: 15000, achieved: 0 };
+
+            localStorage.setItem('staff_checklist_members', JSON.stringify(staffs));
+            saveToLocalStorage();
+
+            if (activeStaff === null) {
+                activeStaff = newId;
+            }
+
+            nameInput.value = '';
+            roleInput.value = '';
+
+            renderModalStaffList();
+            showToast(`${name} लाई स्टाफको रूपमा थपियो !`);
+        }
+
+        async function removeStaffMember(staffId) {
+            const staff = staffs.find(s => s.id === staffId);
+            if (!staff) return;
+
+            const confirmed = await showConfirmModal(
+                "स्टाफ हटाउने?", 
+                `के तपाईं निश्चित रूपमा "${staff.name}" लाई हटाउन चाहनुहुन्छ? हटाउँदा निजको हप्ताभरिको सबै कार्य विवरण, हाजिरी ग्रिड र बिक्री इतिहास पनि मेटिनेछ।`
+            );
+            if (!confirmed) return;
+
+            staffs = staffs.filter(s => s.id !== staffId);
+            localStorage.setItem('staff_checklist_members', JSON.stringify(staffs));
+
+            delete tasks[staffId];
+            delete attendance[staffId];
+            delete salesPerformance[staffId];
+            saveToLocalStorage();
+
+            if (activeStaff === staffId) {
+                activeStaff = staffs.length > 0 ? staffs[0].id : null;
+            }
+
+            renderModalStaffList();
+            showToast(`${staff.name} को विवरण हटाइयो।`, "error");
+        }
+
+        function updateStaffMemberData(staffId) {
+            const staff = staffs.find(s => s.id === staffId);
+            if (!staff) return;
+
+            const name = document.getElementById(`modal-edit-name-${staffId}`).value.trim();
+            const role = document.getElementById(`modal-edit-role-${staffId}`).value.trim() || 'General Duty';
+
+            if (!name) {
+                showToast("स्टाफको नाम खाली राख्न मिल्दैन !", "error");
+                document.getElementById(`modal-edit-name-${staffId}`).value = staff.name;
+                return;
+            }
+
+            staff.name = name;
+            staff.role = role;
+
+            localStorage.setItem('staff_checklist_members', JSON.stringify(staffs));
+            saveToLocalStorage(); 
+            showToast("स्टाफ विवरण सुरक्षित गरियो।");
+        }
+
+        async function triggerResetWithConfirmation() {
+            const confirmed = await showConfirmModal(
+                "डेटा रिसेट गर्ने?", 
+                "के तपाईं निश्चित रूपमा सबै डाटाहरू रिसेट करना चाहनुहुन्छ? यसले तपाईंले थप्नुभएका सबै नयाँ स्टाफहरू, उनीहरूका कामहरू, हाजिरी, बिक्री लक्ष्य, र सबै सिर्जना गरिएका विवरणहरू मेटाएर सुरुवाती अवस्थामा फर्काउनेछ।"
+            );
+            
+            if (confirmed) {
+                localStorage.removeItem('staff_checklist_tasks_2026');
+                localStorage.removeItem('staff_checklist_members');
+                localStorage.removeItem('staff_sync_shop_code');
+                localStorage.removeItem('staff_attendance');
+                localStorage.removeItem('staff_sales');
+                localStorage.removeItem('staff_business_name');
+                localStorage.removeItem('staff_business_tagline');
+                localStorage.removeItem('staff_business_icon');
+                localStorage.removeItem('staff_business_theme');
+                
+                tasks = JSON.parse(JSON.stringify(defaultTasks));
+                staffs = [
+                    { id: 0, name: 'सुरेश श्रेष्ठ', role: 'सञ्चालन (Operations)' },
+                    { id: 1, name: 'सीता कार्की', role: 'बजार/मार्केटिङ (Marketing)' },
+                    { id: 2, name: 'हरी शर्मा', role: 'प्रशासन/लेखा (Accounts)' }
+                ];
+                
+                businessName = "हाम्रो डिजिटल पसल र क्याफे";
+                businessTagline = "क्वालिटी र मुस्कुराउँदो सेवा";
+                businessIcon = "store";
+                businessTheme = "indigo";
+
+                activeStaff = 0;
+                activeDay = 'sun';
+
+                disableCloudSync(); 
+                initDefaultAttendance();
+                initDefaultSales();
+                applyBrandingUI();
+                changeThemeColor(businessTheme, false);
+
+                localStorage.setItem('staff_checklist_members', JSON.stringify(staffs));
+                saveToLocalStorage();
+                
+                renderDaysSelector();
+                renderStaffSelector();
+                updateWorkspace();
+                renderAttendanceAndSales();
+                renderWeeklyReport();
+                updateKPIs();
+                updateChart();
+                document.getElementById('ai-tts-box').classList.add('hidden');
+                document.getElementById('ai-tasks-preview-box').classList.add('hidden');
+                showToast("सफलतापूर्वक सबै विवरणहरू सुरुवाती अवस्थामा रिसेट भयो।", "error");
+            }
+        }
+
+        /* 📄 DIRECT PDF DOWNLOAD GENERATION FUNCTION */
+        function downloadPDF() {
+            const element = document.getElementById('weekly-report-section');
+            const printHeader = document.getElementById('print-only-header');
+            const noPrintElements = element.querySelectorAll('.no-print');
+            
+            if (printHeader) printHeader.classList.remove('hidden');
+            noPrintElements.forEach(el => el.classList.add('hidden'));
+            
+            const opt = {
+                margin:       [10, 10, 10, 10], 
+                filename:     `${businessName.trim().replace(/\s+/g, '_')}_Weekly_Report.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { 
+                    scale: 2, 
+                    useCORS: true, 
+                    letterRendering: true,
+                    scrollX: 0,
+                    scrollY: 0
+                },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' } 
+            };
+            
+            showToast("पीडीएफ तयार हुँदैछ, कृपया एकछिन पर्खनुहोस्...");
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                if (printHeader) printHeader.classList.add('hidden');
+                noPrintElements.forEach(el => el.classList.remove('hidden'));
+                showToast("पीडीएफ फाइल सफलतापूर्वक डाउनलोड भयो! 🎉");
+            }).catch(err => {
+                console.error("PDF Generation Error: ", err);
+                if (printHeader) printHeader.classList.add('hidden');
+                noPrintElements.forEach(el => el.classList.remove('hidden'));
+                showToast("पीडीएफ डाउनलोड गर्दा प्राविधिक समस्या आयो!", "error");
+            });
+        }
+
+        // Initialize on window load
+        window.onload = function () {
+            initializeApp();
+        };
+    </script>
+</body>
+</html>
